@@ -282,3 +282,8 @@ Keymap:
 XYZ - ASD
 ABC - ZXC
 S   - Enter
+
+## Memory mapped storage
+Pros: flat memory map
+Cons: take 4 bytes of memory map + 1 new interrupt
+
