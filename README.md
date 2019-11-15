@@ -233,7 +233,6 @@ add r r/i r
 sub r r/i r
 div r r/i r
 mul r r/i r
-neg r/i r
 
 xor r r/i r
 shl r r/i r
