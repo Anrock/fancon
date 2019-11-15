@@ -109,8 +109,9 @@ To make a sys call
 | save     | 7  | len | src | dst |    |    |     |
 | load     | 8  | len | src | dst |    |    |     |
 | peek     | 9  | src |     |     |    |    |     |
+| bank     | 10 | idx |     |     |    |    |     |
 = Debug ===========================================
-| out      | 10 | len | src |     |    |    |     |
+| out      | 11 | len | src |     |    |    |     |
 +----------+----+-----+-----+-----+----+----+-----+
 ```
 
@@ -171,6 +172,10 @@ Will issue a memory fault if any byte in range `[dst, dst + len]` isn't writable
 **peek: src**
 
 Write `storage[src]` to `r1`
+
+**bank**: idx
+
+Switch storage bank to `idx`
 
 ### Output
 **out: src, len**
