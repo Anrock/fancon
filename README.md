@@ -249,7 +249,6 @@ jmp lbl
 jgz lbl
 jlt lbl
 jez lbl
-jro r/i
 
 int
 brk
