@@ -222,6 +222,7 @@ Embed game cartridge binary into template
 ```
 
 # Assembly
+```
 mov r/i r
 
 add r r/i r
@@ -249,6 +250,7 @@ jro r/i
 
 int i
 brk
+```
 
 # Questions
 ## Check for something useful in Universal.md
