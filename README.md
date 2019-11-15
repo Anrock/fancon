@@ -245,10 +245,10 @@ lodb r/i r
 savw r r/i
 lodw r/i r
 
-jmp lbl
-jgz lbl
-jlt lbl
-jez lbl
+jmp r/i
+jgz r/i
+jlt r/i
+jez r/i
 
 int
 brk
