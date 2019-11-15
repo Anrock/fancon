@@ -234,6 +234,11 @@ Embed game cartridge binary into template
 `external <symbol>` - treat `<symbol>` as external
 `export <symbol>` - make `<symbol>` available in other files via `external`
 
+## Instructions
+`i` - immediate value
+`r` - register
+`r/i` - immediate or register
+
 ```
 add r r/i r
 sub r r/i r
