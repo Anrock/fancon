@@ -14,7 +14,7 @@ executable fancon
                       -Weverything
                       -Wno-missing-exported-signatures
                       -Wmissing-signatures
-                      -Wimplicit-prelude
+                      -Wno-implicit-prelude
                       -Wno-missing-import-lists
                       -Wno-missed-specialisations
                       -Wno-all-missed-specialisations
