@@ -1,18 +1,18 @@
 # Fantasy console
 
 # Table of contents
-* [Memory map](#Memory map)
-* [Registers](#Registers)
+* [Memory map](#Memory-map)
+* [Registers](#registers)
 * [API](#API)
-  * [Call convention](#Call convention)
+  * [Call convention](#Call-convention)
   * [Cartridge](#Cartridge)
   * [Graphics](#Graphics)
   * [Storage](#Storage)
   * [Output](#Output)
 * [Cartridges](#Cartridges)
-  * [System cartridge](#System cartridge)
-    * [Code editor](#Code editor)
-    * [Sprite editor](#Sprite editor)
+  * [System cartridge](#System-cartridge)
+    * [Code editor](#Code-editor)
+    * [Sprite editor](#Sprite-editor)
     * [Console](#Console)
 * [Questions](#Questions)
 
