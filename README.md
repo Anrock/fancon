@@ -227,9 +227,8 @@ Embed game cartridge binary into template
 ```
 
 # Assembly
-```
-mov r/i r
 
+```
 add r r/i r
 sub r r/i r
 div r r/i r
