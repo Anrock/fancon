@@ -251,7 +251,7 @@ jlt lbl
 jez lbl
 jro r/i
 
-int i
+int
 brk
 ```
 
