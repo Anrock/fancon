@@ -257,6 +257,17 @@ int i
 brk
 ```
 
+## Binary instruction format
+`x` - unused bit
+`S` - source register bit
+`D` - destination register bit
+`A` - argument register bit
+`I` - immediate value bit
+```
+1OOOOOOO SSSSDDDD xxxxAAAA
+0OOOOOOO SSSSDDDD IIIIIIII IIIIIIII
+```
+
 # Questions
 ## Check for something useful in Universal.md
 TODO
