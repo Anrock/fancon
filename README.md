@@ -63,7 +63,9 @@
 
 # Registers
 r0..r7, flags, pc
+
 r0 is used as sp
+
 Flags: 0, <0, >0
 
 # API
@@ -114,48 +116,67 @@ To make a sys call
 
 ### Cartridge
 cart
+
 Map external cartridge memory to ram
+
 Does nothing if external cartridge is not inserted
 
 burn: src, dst, len
+
 Burn `len` bytes from `RAM[<src>]` to `dst` of external cartridge
+
 Will issue a memory fault if any byte in range `[src, src + len]` isn't readable
 
 ### Graphics
 sprite: index (0..511), x (0..319), y (0..239)
+
 Blit sprite with `index` to `(x,y)` pixel. Where `(x,y)` is top-left corner
+
 Will issue a gfx fault if any of arguments have invalid value
 
 line: x1 (0..319), y1 (0..239), x2 (0..319), y2 (0..239), color (0..15)
+
 Draw a `pallete[color]` line from `(x1,y1)` to `(x2,y2)`
+
 Will issue a gfx fault if any of arguments have invalid values
 
 fill: x1 (0..319), y1 (0..239), x2 (0..319), y2 (0..239), color (0..15)
 Draw a rectangle filled with `palette[color]` 
+
 with top level corner `(x1,y1)` and right bottom corner at `(x2,y2)`
+
 Will issue a gfx fault if any of arguments have invalid values
 
 scroll: color, x (signed), y (signed)
+
 Scroll screen to horizontally by `x` and vertically by `y`, filling new space with `color`
 
 mode: mode
 Toggle video mode from text to graphics or vice versa
 
+
 ### Storage
 save: src (>=RAM), storage, len
+
 Write `len` bytes from `RAM[src]` to `storage`
+
 Will issue a memory fault if any byte in range `[src, src + len]` isn't readable
 
 load: src, dst, len
+
 Write `len` bytes from `storage[src]` to `RAM[dst]`
+
 Will issue a memory fault if any byte in range `[dst, dst + len]` isn't writable
 
 peek: src
+
 Write `storage[src]` to `r1`
 
 ### Output
 out: src, len
+
 Output `len` bytes starting with `src`
+
 Will issue a memory fault if any byte in range `[src, src + len]` isn't readable
 
 # Cartridges
