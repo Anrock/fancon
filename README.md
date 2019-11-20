@@ -277,8 +277,6 @@ brk
 ```
 
 # Questions
-## Check for something useful in Universal.md
-TODO
 
 ## Gamepad layout
 ```
