@@ -250,8 +250,8 @@ shf r r/i r
 and r r/i r
 or  r r/i r
 
-savw r r/i
-lodw r/i r
+save r r/i
+load r/i r
 
 jmp r/i
 jgz r/i
