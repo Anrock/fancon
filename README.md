@@ -246,13 +246,10 @@ div r r/i r
 mul r r/i r
 
 xor r r/i r
-shl r r/i r
-shr r r/i r
+shf r r/i r
 and r r/i r
 or  r r/i r
 
-savb r r/i
-lodb r/i r
 savw r r/i
 lodw r/i r
 
@@ -277,14 +274,6 @@ brk
 ```
 
 # Questions
-## Reduce opcodes
-Merge shl and shr to single shf with signed argument?
-Remove savb and lodb and use bit ops to get specific byte?
-19 - 4 + 1 = 19 - 3 = 16 opcodes = 5 bits for enumeration
-
-```
-1OOO OSSS SDDD DAAAA
-```
 
 ## Indirect adressing for registers
 ```
