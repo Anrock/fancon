@@ -272,8 +272,8 @@ brk
 `A` - argument register bit
 `I` - immediate value bit
 ```
-1OOOOOOO SSSSDDDD xxxxAAAA
-0OOOOOOO SSSSDDDD IIIIIIII IIIIIIII
+1OOOOOOO xxSSSDDD xxxxxAAA
+0OOOOOOO xxSSSDDD IIIIIIII IIIIIIII
 ```
 
 # Questions
