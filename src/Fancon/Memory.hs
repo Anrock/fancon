@@ -12,6 +12,8 @@ module Fancon.Memory (
 
   ram,
   readByte,
+  writeByte,
+
   registerFile,
   storage,
 
@@ -83,3 +85,6 @@ data RegisterFile = RegisterFile {
 
 readByte :: RAM -> Address -> Byte
 readByte ram addr = ram ! addr
+
+writeByte :: RAM -> Address -> Byte -> RAM
+writeByte ram addr val = ram // [(addr, val)]
