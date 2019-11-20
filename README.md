@@ -277,6 +277,14 @@ brk
 ```
 
 # Questions
+## Reduce opcodes
+Merge shl and shr to single shf with signed argument?
+Remove savb and lodb and use bit ops to get specific byte?
+19 - 4 + 1 = 19 - 3 = 16 opcodes = 5 bits for enumeration
+
+```
+1OOO OSSS SDDD DAAAA
+```
 
 ## Gamepad layout
 ```
