@@ -1,11 +1,21 @@
 module Fancon.Memory (
-  Memory,
   RegisterFile,
+  Cartridge,
+  RAM,
+  Address,
+  Value,
+  Byte,
+
+  emptyMemory,
+  emptyRAM,
+  emptyCartridge,
+
   ram,
   registerFile,
   storage,
-  initialMemory,
+
   initialRegisterFile,
+
   hardwareStateAddress,
   inputAddress,
   interruptState,
@@ -14,22 +24,34 @@ module Fancon.Memory (
 ) where
 
 import Data.Array
-import Data.Word (Word16)
+import Data.Word (Word16, Word8)
 
-hardwareStateAddress, inputAddress, interruptState, interruptHandlerAddress, ramAddress :: Word16
+hardwareStateAddress, inputAddress, interruptState, interruptHandlerAddress, ramAddress :: Address
 hardwareStateAddress = 0
 inputAddress = 1
 interruptState = 2
 interruptHandlerAddress = 3
 ramAddress = 4
 
-type Bank = Array Word16 Word16
+type Bank = Array Address Byte
+type Cartridge = Bank
+type RAM = Bank
+
+type Address = Word16
+type Byte = Word8
+type Value = Byte
+
+emptyRAM :: RAM
+emptyRAM = emptyBank
+
+emptyCartridge :: Cartridge
+emptyCartridge = emptyBank
 
 emptyBank :: Bank
-emptyBank = array (0, maxBound :: Word16) [(i, 0) | i <- [0..maxBound :: Word16]]
+emptyBank = array (0, maxBound :: Address) [(i, 0) | i <- [0..maxBound :: Address]]
 
-initialMemory :: Memory
-initialMemory = Memory {
+emptyMemory :: Memory
+emptyMemory = Memory {
   ram = emptyBank,
   registerFile = initialRegisterFile,
   storage = emptyBank,
@@ -45,11 +67,11 @@ initialRegisterFile = RegisterFile {
 }
 
 data Memory = Memory {
-  ram :: Bank,
+  ram :: RAM,
   registerFile :: RegisterFile,
   storage :: Bank,
-  internalCartridge :: Bank,
-  externalCartridge :: Maybe Bank
+  internalCartridge :: Cartridge,
+  externalCartridge :: Maybe Cartridge
 }
 
 data RegisterFile = RegisterFile {
