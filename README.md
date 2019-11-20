@@ -302,32 +302,6 @@ REGN     ::= 0..7
 ```
 Same 20 or 32 bits instruction length but can also have indirect adressing
 
-## Disallow immediates in opcodes
-Return `mov` as the only instruction able to use immediate value
-Disallow using immediates in other instructions
-Probably will reduce instruction size
-
-```
-mov r r
-movi i r
-add r r r
-sub r r r
-div r r r
-mul r r r
-shf r r r
-and r r r
-or  r r r
-sav r r
-lod r r
-jmp r
-jgz r
-jlt r
-jez r
-int
-brk
-```
-Nope, 17 instructions so at least 5 bits needed
-
 ## Gamepad layout
 ```
  ^    XYZ
