@@ -41,6 +41,8 @@ executable fancon
                       , TypeOperators
                       , TypeFamilies
                       , TemplateHaskell
+                      , BinaryLiterals
+                      , NumericUnderscores
   build-depends:        base >= 4.7 && < 5
                       , array
                       , containers
