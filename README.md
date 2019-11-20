@@ -286,6 +286,11 @@ Remove savb and lodb and use bit ops to get specific byte?
 1OOO OSSS SDDD DAAAA
 ```
 
+## Disallow immediates in opcodes
+Return `mov` as the only instruction able to use immediate value
+Disallow using immediates in other instructions
+Probably will reduce instruction size
+
 ## Gamepad layout
 ```
  ^    XYZ
