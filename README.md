@@ -286,6 +286,22 @@ Remove savb and lodb and use bit ops to get specific byte?
 1OOO OSSS SDDD DAAAA
 ```
 
+## Indirect adressing for registers
+```
+INSTR    ::= OPCODE SRC DST ARG
+OPCODE   ::= 0..255
+SRC      ::= REG
+DST      ::= REG
+REG      ::= MODE REGN
+MODE     ::= DIRECT | INDIRECT
+DIRECT   ::= 1
+INDIRECT ::= 0
+ARG      ::= REG | IMM
+IMM      ::= 0..65535
+REGN     ::= 0..7
+```
+Same 20 or 32 bits instruction length but can also have indirect adressing
+
 ## Disallow immediates in opcodes
 Return `mov` as the only instruction able to use immediate value
 Disallow using immediates in other instructions
