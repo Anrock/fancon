@@ -274,7 +274,6 @@ brk
 ```
 
 # Questions
-
 ## Indirect adressing for registers
 ```
 INSTR    ::= OPCODE SRC DST ARG
@@ -306,3 +305,7 @@ S   - Enter
 Pros: flat memory map
 Cons: take 4 bytes of memory map + 1 new interrupt
 
+## Word-addressable memory
+Instead of addressing bytes, address 16-bit words
+Pros: 128k addressable
+Cons: Bit-fiddling to get a byte, gotta rework all memmap, probably API too
