@@ -11,6 +11,7 @@ module Fancon.Memory (
   emptyCartridge,
 
   ram,
+  readByte,
   registerFile,
   storage,
 
@@ -79,3 +80,6 @@ data RegisterFile = RegisterFile {
   r4 :: Word16, r5 :: Word16, r6 :: Word16, r7 :: Word16,
   pc :: Word16, flags :: Word16
 }
+
+readByte :: RAM -> Address -> Byte
+readByte ram addr = ram ! addr
