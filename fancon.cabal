@@ -11,6 +11,7 @@ executable fancon
   default-language:   Haskell2010
   other-modules:      Fancon.Memory
   ghc-options:        -O2 -flate-specialise -fspecialise-aggressively
+                      -fplugin=Polysemy.Plugin
                       -threaded
                       -Weverything
                       -Wno-missing-exported-signatures
@@ -48,6 +49,7 @@ executable fancon
                       , containers
                       , megaparsec
                       , polysemy
+                      , polysemy-plugin
                       , bytestring
                       , yaml
                       , text
