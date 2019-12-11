@@ -228,11 +228,14 @@ Embed game cartridge binary into template
 
 # Assembly
 ## Syntax
-`# ignored` - beginning of comment, everything after it till eol is ignored
 `<instruction>`
-`<label>:` - defines a label, alias `<label>` to address of next instruction
-`external <symbol>` - treat `<symbol>` as external
-`export <symbol>` - make `<symbol>` available in other files via `external`
+`.<command>`
+
+Commands:
+  * label <label> - mark next instruction address as <label>
+  * export <label> - make <label> available to use in another files
+  * import <label> - use <label> address from another file
+  * <empty> - ignore everything until eol, used as comment
 
 ## Instructions
 `i` - immediate value
