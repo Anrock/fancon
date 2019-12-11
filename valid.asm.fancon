@@ -1,0 +1,29 @@
+. arith: add, sub, div, mul, xor, shf, and, or
+. imm arith addi, subi, divi, muli, xori, shfi, andi, ori
+. jumps: jmp, jgz, jlt, jez
+. imm jumps: jmpi, jgzi, jlti, jezi
+. special: int, brk
+
+. arith: add, div, mul, xor, shf, and, or
+. imm arith divi, muli, xori, shfi, andi, ori
+. jumps: jmp, jgz, jlt, jez
+. imm jumps: jmpi, jgzi, jlti, jezi
+. special: int, brk
+
+.external some-external-thing
+.export main
+
+.label main
+sub r0 r0 r0
+add r0 2  r0
+sub r0 1  r0
+jmp another-function
+
+.label another-function
+add r1 100 r1
+jgz r1 and-another-function
+
+.label and-another-function
+add r0 1 r1
+int
+brk
