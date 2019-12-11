@@ -254,9 +254,9 @@ save r r/i
 load r/i r
 
 jmp r/i
-jgz r/i
-jlt r/i
-jez r/i
+jgz r r/i
+jlt r r/i
+jez r r/i
 
 int
 brk
