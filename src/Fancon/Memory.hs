@@ -3,7 +3,7 @@ module Fancon.Memory (
   Cartridge,
   RAM,
   Address,
-  Value,
+  Word,
   Byte,
 
   emptyMemory,
@@ -26,6 +26,7 @@ module Fancon.Memory (
   ramAddress
 ) where
 
+import Prelude hiding (Word)
 import Data.Array
 import Data.Word (Word16, Word8)
 
@@ -40,9 +41,9 @@ type Bank = Array Address Byte
 type Cartridge = Bank
 type RAM = Bank
 
-type Address = Word16
 type Byte = Word8
-type Value = Byte
+type Word = Word16
+type Address = Word
 
 emptyRAM :: RAM
 emptyRAM = emptyBank
