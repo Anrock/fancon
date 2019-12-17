@@ -12,6 +12,7 @@ executable fancon
   other-modules:        Fancon.Memory
                       , Fancon.Instruction
                       , Fancon.Emit
+                      , Fancon.Parse
   ghc-options:        -O2 -flate-specialise -fspecialise-aggressively
                       -fplugin=Polysemy.Plugin
                       -threaded
