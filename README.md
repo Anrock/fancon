@@ -62,9 +62,9 @@
 ```
 
 # Registers
-r0..r7, flags, pc
+r0..r7, flags, pc, sp
 
-r0 is used as sp
+r0 always reads 0
 
 Flags: 0, <0, >0
 
