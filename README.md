@@ -243,26 +243,25 @@ Commands:
 `r/i` - immediate or register
 
 ```
-add r r/i r
-sub r r/i r
-div r r/i r
-mul r r/i r
-
-xor r r/i r
-shf r r/i r
-and r r/i r
-or  r r/i r
-
-save r r/i
-load r/i r
-
-jmp r/i
-jgz r r/i
-jlt r r/i
-jez r r/i
-
-int
-brk
++----------+-----+-----+-----+
+| Mnemonic | Src | Arg | Dst |
++----------+-----+-----+-----+
+| add      | r   | r/i | r   |
+| sub      | r   | r/i | r   |
+| div      | r   | r/i | r   |
+| mul      | r   | r/i | r   |
+| xor      | r   | r/i | r   |
+| shf      | r   | r/i | r   |
+| and      | r   | r/i | r   |
+| or       | r   | r/i | r   |
+| save     | r   | r/i |     |
+| load     |     | r/i | r   |
+| jmp      |     | r/i |     |
+| jgz      | r   | r/i |     |
+| jlt      | r   | r/i |     |
+| jez      | r   | r/i |     |
+| int      |     |     |     |
+| brk      |     |     |     |
 ```
 
 ## Binary instruction format
