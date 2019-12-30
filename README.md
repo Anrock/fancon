@@ -311,3 +311,9 @@ Cons: take 4 bytes of memory map + 1 new interrupt
 Instead of addressing bytes, address 16-bit words
 Pros: 128k addressable
 Cons: Bit-fiddling to get a byte, gotta rework all memmap, probably API too, all instructions become 2 words with lots of unused bits
+
+## Base/bank register
+Make additional register to act as a base for mem instructions
+Pros: more addressable memory
+Cons: ???
+
