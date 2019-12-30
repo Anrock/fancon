@@ -235,6 +235,7 @@ Commands:
   * label <label> - mark next instruction address as <label>
   * export <label> - make <label> available to use in another files
   * import <label> - use <label> address from another file
+  * const <name> <val> - define constant value of <val> named <name>
   * <empty> - ignore everything until eol, used as comment
 
 ## Instructions
