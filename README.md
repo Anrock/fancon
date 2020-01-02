@@ -239,32 +239,39 @@ Commands:
   * <empty> - ignore everything until eol, used as comment
 
 ## Instructions
-`i` - immediate value
-`r` - register
-`r/i` - immediate or register
+```
++----------+-----+-----+-----+
+| Mnemonic | A   | B   | C   |
++----------+-----+-----+-----+
+| add      | r/i | r/i | r   |
+| sub      | r/i | r/i | r   |
+| div      | r/i | r/i | r   |
+| mul      | r/i | r/i | r   |
+| xor      | r/i | r/i | r   |
+| shf      | r/i | r/i | r   |
+| and      | r/i | r/i | r   |
+| or       | r/i | r/i | r   |
+| save     | r/i | r/i |     | Write A to mem[B]
+| load     | r/i | r   |     | Write mem[A] to register B
+| jgz      | r   | r/i |     | Jump to mem[B] if A is >0
+| jlt      | r   | r/i |     | Jump to mem[B] if A is <0
+| jez      | r   | r/i |     | Jump to mem[B] if A is 0
+| int      |     |     |     | Interrupt
+| brk      |     |     |     | Break
+```
 
-```
-+----------+-----+-----+-----+
-| Mnemonic | Src | Arg | Dst |
-+----------+-----+-----+-----+
-| add      | r   | r/i | r   |
-| sub      | r   | r/i | r   |
-| div      | r   | r/i | r   |
-| mul      | r   | r/i | r   |
-| xor      | r   | r/i | r   |
-| shf      | r   | r/i | r   |
-| and      | r   | r/i | r   |
-| or       | r   | r/i | r   |
-| save     | r   | r/i |     |
-| load     |     | r/i | r   |
-| push     |     | r/i |     |
-| pop      |     |     | r   |
-| jgz      | r   | r/i |     |
-| jlt      | r   | r/i |     |
-| jez      | r   | r/i |     |
-| int      |     |     |     |
-| brk      |     |     |     |
-```
+## Binary instruction format
+`o` - opcode bit
+`t` - operand type bit, if set then operand is immediate, otherwise - register
+`x` - unused
+
+Instruction bits:
+First byte: `ooooottt`
+Operand values are packed depending on `ttt` bits:
+`000` - `xxaaabbb xxxxxccc`
+`001`, `010`, `100` - `xxaaabbb cccccccc cccccccc`
+`101`, `110`, `011` - `xxxxxaaa bbbbbbbb bbbbbbbb cccccccc cccccccc`
+`111` - `aaaaaaaa aaaaaaaa bbbbbbbb bbbbbbbb cccccccc cccccccc`
 
 # Questions
 ## Indirect adressing for registers
