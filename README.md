@@ -306,10 +306,6 @@ XYZ - ASD
 ABC - ZXC
 S   - Enter
 
-## Memory mapped storage
-Pros: flat memory map
-Cons: take 4 bytes of memory map + 1 new interrupt
-
 ## Word-addressable memory
 Instead of addressing bytes, address 16-bit words
 Pros: 128k addressable
@@ -320,3 +316,35 @@ Make additional register to act as a base for mem instructions
 Pros: more addressable memory
 Cons: ???
 
+## Memory mapped devices / Remove syscalls
+We actually don't have any system desu
+
+Cartidge:
+  Present: bit
+  Mask interrupt: bit
+  Mem: 65535 bytes
+
+Storage:
+  Busy: bit
+  Mask interrupt: bit
+  Src: word
+  Dst: word
+  Len: word
+
+GPU:
+  Screen buffer: 320x240x4bits pixels = 38400 bytes
+  Palette: 16*3bytes = 48 bytes
+  Sprites: 512*8*8*4 = 16384 bytes
+  Busy: bit
+  Mask interrupt: bit
+  Command: 2 bit
+  Color: 4 bits
+  X1: word
+  Y1: word
+  X2: word
+  Y2: word
+
+Input:
+  Pressed: bit
+  Mask interrupt: bit
+  Char: 7 bit
