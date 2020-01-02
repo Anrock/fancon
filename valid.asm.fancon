@@ -17,7 +17,7 @@
 sub r0 r0 r0
 add r0 2  r0
 sub r0 1  r0
-jmp another-function
+jgz r0 another-function
 
 .label another-function
 add r1 100 r1

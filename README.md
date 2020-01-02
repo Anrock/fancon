@@ -259,7 +259,6 @@ Commands:
 | load     |     | r/i | r   |
 | push     |     | r/i |     |
 | pop      |     |     | r   |
-| jmp      |     | r/i |     |
 | jgz      | r   | r/i |     |
 | jlt      | r   | r/i |     |
 | jez      | r   | r/i |     |
