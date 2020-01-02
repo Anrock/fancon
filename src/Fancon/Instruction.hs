@@ -1,121 +1,129 @@
 module Fancon.Instruction
   ( Opcode(..)
+  , OperandsLayout
+  , OperandType(..)
   , Operands(..)
-  , Instruction, opcode, operands
-  , r0, r1, r2, r3, r4, r5, r6, r7
-  , add, sub, div, mul, xor, shf, and, or
-  , addi, subi, divi, muli, xori, shfi, andi, ori
-  , save, savei, load, loadi
-  , jmp, jmpi, jgz, jgzi, jlt, jlti, jez, jezi
-  , int, brk
+  , Instruction(..)
+  , Valid
+  , unValid
+  , validate
+  , Error(..)
   ) where
 
 import Prelude hiding (div, and, or, Word)
+import Control.Applicative ((<|>))
 
 import Fancon.Memory
 
-data Opcode = AddR  | AddI
-            | SubR  | SubI
-            | DivR  | DivI
-            | MulR  | MulI
-            | XorR  | XorI
-            | ShfR  | ShfI
-            | AndR  | AndI
-            | OrR   | OrI
-            | SaveR | SaveI
-            | LoadR | LoadI
-            | JmpR  | JmpI
-            | JgzR  | JgzI
-            | JltR  | JltI
-            | JezR  | JezI
+data Opcode = Add
+            | Sub
+            | Div
+            | Mul
+            | Xor
+            | Shf
+            | And
+            | Or
+            | Save
+            | Load
+            | Jgz
+            | Jlt
+            | Jez
             | Int
             | Brk
             deriving (Eq, Show, Bounded, Enum)
 
+data OperandType = Immediate | Register | Unused deriving (Eq, Show)
+
+type OperandsLayout = (OperandType, OperandType, OperandType)
+
 data Operands = RRR Byte Byte Byte
+              | RRI Byte Byte Word
+              | RII Byte Word Word
+              | III Word Word Word
               | RR Byte Byte
+              | RI Byte Word
+              | II Word Word
               | R Byte
               | I Word
-              | RRI Byte Byte Word
-              | RI Byte Word
               | None
               deriving (Eq, Show)
 
-data Instruction = Instruction { opcode :: Opcode
-                               , operands :: Operands
-                               } deriving (Eq, Show)
+data Instruction = Instruction Opcode OperandsLayout Operands deriving (Eq, Show)
 
-r0, r1, r2, r3, r4, r5, r6, r7 :: Byte
-r0 = 0
-r1 = 1
-r2 = 2
-r3 = 3
-r4 = 4
-r5 = 5
-r6 = 6
-r7 = 7
+newtype Valid = Valid { unValid :: Instruction } deriving (Eq, Show)
 
-rrr :: Opcode -> Byte -> Byte -> Byte -> Instruction
-rrr op a b c = Instruction op (RRR a b c)
+data Error = InvalidLayout
+           | InvalidOperands
+  deriving (Eq, Show)
 
-rri :: Opcode -> Byte -> Word -> Byte -> Instruction
-rri op a b c = Instruction op (RRI a c b)
+validate :: Instruction -> Either Error Valid
+validate ins@(Instruction opcode layout operands) =
+  case validateLayout opcode layout >> validateOperands layout operands of
+    Just e -> Left e
+    Nothing -> Right . Valid $ ins
 
-rr :: Opcode -> Byte -> Byte -> Instruction
-rr op a b = Instruction op (RR a b)
+validateLayout :: Opcode -> OperandsLayout -> Maybe Error
+validateLayout Add (a, b, c) = isRI a >> isRI b >> isR c
+validateLayout Sub (a, b, c) = isRI a >> isRI b >> isR c
+validateLayout Div (a, b, c) = isRI a >> isRI b >> isR c
+validateLayout Mul (a, b, c) = isRI a >> isRI b >> isR c
+validateLayout Xor (a, b, c) = isRI a >> isRI b >> isR c
+validateLayout Shf (a, b, c) = isRI a >> isRI b >> isR c
+validateLayout And (a, b, c) = isRI a >> isRI b >> isR c
+validateLayout Or  (a, b, c) = isRI a >> isRI b >> isR c
+validateLayout Save (a, b, c) = isRI a >> isRI b >> isU c
+validateLayout Load (a, b, c) = isRI a >> isR b >> isU c
+validateLayout Jgz (a, b, c) = isR a >> isRI b >> isU c
+validateLayout Jlt (a, b, c) = isR a >> isRI b >> isU c
+validateLayout Jez (a, b, c) = isR a >> isRI b >> isU c
+validateLayout Int (a, b, c) = isU a >> isU b >> isU c
+validateLayout Brk (a, b, c) = isU a >> isU b >> isU c
 
-ri :: Opcode -> Byte -> Word -> Instruction
-ri op a b = Instruction op (RI a b)
+isR, isI, isRI, isU :: OperandType -> Maybe Error
+isR Register = Nothing
+isR _ = Just InvalidLayout
+isI Immediate = Nothing
+isI _ = Just InvalidLayout
+isU Unused = Nothing
+isU _ = Just InvalidLayout
+isRI o = isI o <|> isR o
 
-none :: Opcode -> Instruction
-none op = Instruction op None
+validateOperands :: OperandsLayout -> Operands -> Maybe Error
+validateOperands (Register, Register, Register) RRR {} = Nothing
 
-add, sub, div, mul, xor, shf, and, or :: Byte -> Byte -> Byte -> Instruction
-add = rrr AddR
-sub = rrr SubR
-div = rrr DivR
-mul = rrr MulR
-xor = rrr XorR
-shf = rrr ShfR
-and = rrr AndR
-or  = rrr OrR
+validateOperands (Register, Immediate, Register) RRI {} = Nothing
+validateOperands (Register, Register, Immediate) RRI {} = Nothing
+validateOperands (Immediate, Register, Register) RRI {} = Nothing
 
-addi, subi, divi, muli, xori, shfi, andi, ori :: Byte -> Word -> Byte -> Instruction
-addi = rri AddI
-subi = rri SubI
-divi = rri DivI
-muli = rri MulI
-xori = rri XorI
-shfi = rri ShfI
-andi = rri AndI
-ori  = rri OrI
+validateOperands (Register, Immediate, Immediate) RII {} = Nothing
+validateOperands (Immediate, Register, Immediate) RII {} = Nothing
+validateOperands (Immediate, Immediate, Register) RII {} = Nothing
 
-save, load :: Byte -> Byte -> Instruction
-save = rr SaveR
-load = rr LoadR
+validateOperands (Immediate, Immediate, Immediate) III {} = Nothing
 
-savei :: Byte -> Word -> Instruction
-savei = ri SaveI
+validateOperands (Register, Register, Unused) RR {} = Nothing
+validateOperands (Register, Unused, Register) RR {} = Nothing
+validateOperands (Unused, Register, Register) RR {} = Nothing
 
-loadi :: Word -> Byte -> Instruction
-loadi a b = ri LoadI b a
+validateOperands (Register, Immediate, Unused) RI {} = Nothing
+validateOperands (Register, Unused, Immediate) RI {} = Nothing
+validateOperands (Immediate, Register, Unused) RI {} = Nothing
+validateOperands (Immediate, Unused, Register) RI {} = Nothing
+validateOperands (Unused, Register, Immediate) RI {} = Nothing
+validateOperands (Unused, Immediate, Register) RI {} = Nothing
 
-jmp :: Byte -> Instruction
-jmp a = Instruction JmpR (R a)
+validateOperands (Immediate, Immediate, Unused) II {} = Nothing
+validateOperands (Immediate, Unused, Immediate) II {} = Nothing
+validateOperands (Unused, Immediate, Immediate) II {} = Nothing
 
-jmpi :: Word -> Instruction
-jmpi a = Instruction JmpI (I a)
+validateOperands (Register, Unused, Unused) R {} = Nothing
+validateOperands (Unused, Register, Unused) R {} = Nothing
+validateOperands (Unused, Unused, Register) R {} = Nothing
 
-jgz, jlt, jez :: Byte -> Byte -> Instruction
-jgz = rr JgzR
-jlt = rr JltR
-jez = rr JezR
+validateOperands (Immediate, Unused, Unused) I {} = Nothing
+validateOperands (Unused, Immediate, Unused) I {} = Nothing
+validateOperands (Unused, Unused, Immediate) I {} = Nothing
 
-jgzi, jlti, jezi :: Byte -> Word -> Instruction
-jgzi = ri JgzI
-jlti = ri JltI
-jezi = ri JezI
+validateOperands (Unused, Unused, Unused) None = Nothing
 
-int, brk :: Instruction
-int = none Int
-brk = none Brk
+validateOperands _ _ = Just InvalidOperands
