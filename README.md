@@ -267,17 +267,6 @@ Commands:
 | brk      |     |     |     |
 ```
 
-## Binary instruction format
-`x` - unused bit
-`S` - source register bit
-`D` - destination register bit
-`A` - argument register bit
-`I` - immediate value bit
-```
-1OOOOOOO xxSSSDDD xxxxxAAA
-0OOOOOOO xxSSSDDD IIIIIIII IIIIIIII
-```
-
 # Questions
 ## Indirect adressing for registers
 ```
