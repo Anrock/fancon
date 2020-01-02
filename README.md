@@ -101,8 +101,8 @@ To make a sys call
 | burn     | 1  | src | dst | len |    |    |     |
 = Graphics ========================================
 | sprite   | 2  | idx | x   | y   |    |    |     |
-| line     | 3  | idx | x1  | y1  | x2 | x1 | y2  |
-| fill     | 4  | idx | x1  | y1  | x2 | x1 | y2  |
+| line     | 3  | idx | x1  | y1  | x2 | y2 |     |
+| fill     | 4  | idx | x1  | y1  | x2 | y2 |     |
 | scroll   | 5  | idx | x   | y   |    |    |     |
 | mode     | 6  |     |     |     |    |    |     |
 = Storage =========================================
