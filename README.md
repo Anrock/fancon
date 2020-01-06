@@ -257,6 +257,8 @@ Commands:
 | or       | r   | r/i | r   |
 | save     | r   | r/i |     |
 | load     |     | r/i | r   |
+| push     |     | r/i |     |
+| pop      |     |     | r   |
 | jmp      |     | r/i |     |
 | jgz      | r   | r/i |     |
 | jlt      | r   | r/i |     |
