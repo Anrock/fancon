@@ -331,3 +331,7 @@ Input:
   Pressed: bit
   Mask interrupt: bit
   Char: 7 bit
+
+## Add offset argument to memory instructions
+Ex: save r2 40000 65000
+Will allow to address more than 64k of memory
