@@ -11,6 +11,8 @@ executable fancon
   default-language:   Haskell2010
   other-modules:        Fancon.Memory
                       , Fancon.Instruction
+                      , Fancon.Instruction.Internal
+                      , Fancon.Instruction.Validate
                       , Fancon.Emit
                       , Fancon.Parse
                       , Fancon.Assemble
