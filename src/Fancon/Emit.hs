@@ -3,31 +3,38 @@ module Fancon.Emit (emit, pack) where
 import Prelude hiding (Word)
 import qualified Data.ByteString.Lazy as B
 import qualified Data.ByteString.Builder as B
+import Data.List (sortBy)
 
-import Data.Bits (shiftL, (.|.))
+import Data.Bits (shiftL, (.|.), zeroBits)
 
-import Fancon.Instruction
+import Fancon.Instruction.Internal
 import Fancon.Memory
 
 emit :: [Instruction] -> B.ByteString
 emit = B.toLazyByteString . mconcat . fmap emitInstruction
 
 emitInstruction :: Instruction -> B.Builder
-emitInstruction ins = emitOpcode op <> emitOperands ops
-  where op = opcode ins
-        ops = operands ins
+emitInstruction ins@Instruction{operands} =
+  emitFirstByte ins <> emitOperands (sortBy packingOrder operands)
 
-emitOpcode :: Opcode -> B.Builder
-emitOpcode = B.word8 . fromIntegral . fromEnum
+emitFirstByte :: Instruction -> B.Builder
+emitFirstByte (Instruction opcode operands) = pack opcodeByte layoutByte
+  where opcodeByte = fromIntegral . fromEnum $ opcode
+        layoutByte :: Byte
+        layoutByte = foldr (.|.) zeroBits (layoutBit <$> operands)
+        layoutBit (Register _) = 0b0
+        layoutBit (Immediate _) = 0b1
 
-emitOperands :: Operands -> B.Builder
-emitOperands (RRR a b c) = pack a b <> B.word8 c
-emitOperands (RRI a b c) = pack a b <> B.word16BE c
-emitOperands (RR a b) = pack a b
-emitOperands (R a) = B.word8 a
-emitOperands (I a) = B.word16BE a
-emitOperands (RI a b) = B.word8 a <> B.word16BE b
-emitOperands None = mempty
+packingOrder :: Operand -> Operand -> Ordering
+packingOrder (Register _) _ = LT
+packingOrder _ (Register _) = GT
+packingOrder (Immediate _) _ = GT
+
+emitOperands :: [Operand] -> B.Builder
+emitOperands (Register a:Register b:rest) = pack a b <> emitOperands rest
+emitOperands (Register a:rest) = B.word8 a <> emitOperands rest
+emitOperands (Immediate a:rest) = B.word16BE a <> emitOperands rest
+emitOperands [] = mempty
 
 pack :: Byte -> Byte -> B.Builder
 pack a b = B.word8 $ shiftL a 3 .|. b
