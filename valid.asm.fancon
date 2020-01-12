@@ -10,7 +10,7 @@
 . imm jumps: jmpi, jgzi, jlti, jezi
 . special: int, brk
 
-.external some-external-thing
+.import some-external-value
 .export main
 
 .label main
