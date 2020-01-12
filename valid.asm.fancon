@@ -20,7 +20,7 @@ sub r0 1  r0
 jgz r0 another-function
 
 .label another-function
-add r1 100 r1
+add r1 some-external-value r1
 jgz r1 and-another-function
 
 .label and-another-function
