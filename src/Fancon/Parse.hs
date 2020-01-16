@@ -51,18 +51,18 @@ instruction = lineLexeme $ do
   pure $ Instruction op operands
 
 operand :: Parser Operand
-operand = (Register <$> register) <|> (Immediate <$> immediate) <|> (Label <$> label)
+operand = register <|> immediate <|> label
 
-register :: Parser Byte
+register :: Parser Operand
 register = lexeme $ do
   registerPrefix
-  L.decimal <?> "register number"
+  Register <$> L.decimal <?> "register number"
 
 registerPrefix :: Parser ()
 registerPrefix = void (symbol "r" <?> "register prefix")
 
-immediate :: Parser Word
-immediate = lexeme L.decimal <?> "immediate value"
+immediate :: Parser Operand
+immediate = lexeme $ Immediate <$> (L.decimal <?> "immediate value")
 
-label :: Parser Text
-label = identifier <?> "label"
+label :: Parser Operand
+label = Label <$> identifier <?> "label"
