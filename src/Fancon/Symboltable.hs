@@ -15,7 +15,7 @@ import qualified Data.Map as M
 import Data.Text (Text)
 import Data.Maybe (isJust, isNothing)
 
-data Symbol = Symbol { references :: [Int]
+data Symbol = Symbol { references :: [(Int, Int)]
                      , exported :: Bool
                      , imported :: Bool
                      , definedAt :: Maybe Int
@@ -29,8 +29,8 @@ emptySymbol = Symbol { references = []
                      , definedAt = Nothing
                      }
 
-reference' :: Int -> Symbol -> Symbol
-reference' line sym@Symbol{references} = sym{references = line:references}
+reference' :: Int -> Int -> Symbol -> Symbol
+reference' line idx sym@Symbol{references} = sym{references = (line, idx):references}
 
 define' :: Int -> Symbol -> Symbol
 define' ofs sym = sym{definedAt = Just ofs}
@@ -46,8 +46,8 @@ type Symtab = M.Map Text Symbol
 emptySymtab :: Symtab
 emptySymtab = M.empty
 
-reference :: Text -> Int -> Symtab -> Symtab
-reference name line symtab = M.insert name (reference' line (M.findWithDefault emptySymbol name symtab)) symtab
+reference :: Text -> Int -> Int -> Symtab -> Symtab
+reference name line idx symtab = M.insert name (reference' line idx (M.findWithDefault emptySymbol name symtab)) symtab
 
 markImported :: Text -> Symtab -> Symtab
 markImported name symtab = M.insert name (markImported' (M.findWithDefault emptySymbol name symtab)) symtab

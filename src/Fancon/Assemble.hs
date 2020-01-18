@@ -82,13 +82,13 @@ instruction opcodeStr operands = do
   case Ins.validateOpcode opcodeStr of
     Nothing -> emitError $ InvalidOpcode opcodeStr line
     Just opcode -> do
-      operands' <- forM operands $ \case
-        P.Register r -> pure $ Ins.Register r
-        P.Immediate i -> pure $ Ins.Immediate i
-        P.Label l -> do (symtab, sigLine) <- (,) <$> gets symbolTable <*> gets significantLineNumber
-                        let symtab' = reference l sigLine symtab
-                        modify (\s -> s{symbolTable = symtab'})
-                        pure $ Ins.Immediate 0
+      operands' <- forM (zip [0..] operands) $ \case
+        (_, P.Register r)  -> pure $ Ins.Register r
+        (_, P.Immediate i) -> pure $ Ins.Immediate i
+        (ix, P.Label l)    -> do (symtab, sigLine) <- (,) <$> gets symbolTable <*> gets significantLineNumber
+                                 let symtab' = reference l sigLine ix symtab
+                                 modify (\s -> s{symbolTable = symtab'})
+                                 pure $ Ins.Immediate 0
       case Ins.validateInstruction opcode operands' of
         Just ins -> emitInstruction ins
         Nothing -> emitError $ InvalidOperands operands' line
@@ -126,4 +126,4 @@ validateSymtab :: Member (State AssemblerState) r => Sem r ()
 validateSymtab = do
   symtab <- gets symbolTable
   forM_ (unreferencedSymbols symtab) (\(name, sym) -> emitWarning $ UnreferencedSymbol name sym)
-  forM_ (undefinedSymbols symtab) (\(name, Symbol{references}) -> forM_ references (emitError . UndefinedSymbolReference name))
+  forM_ (undefinedSymbols symtab) (\(name, Symbol{references}) -> forM_ references (emitError . UndefinedSymbolReference name . fst))
