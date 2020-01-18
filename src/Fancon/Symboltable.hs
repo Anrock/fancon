@@ -18,7 +18,7 @@ import Data.Maybe (isJust, isNothing)
 data Symbol = Symbol { references :: [(Int, Int)]
                      , exported :: Bool
                      , imported :: Bool
-                     , definedAt :: Maybe Int
+                     , value :: Maybe Int
                      }
             deriving (Eq, Show)
 
@@ -26,14 +26,14 @@ emptySymbol :: Symbol
 emptySymbol = Symbol { references = []
                      , exported = False
                      , imported = False
-                     , definedAt = Nothing
+                     , value = Nothing
                      }
 
 reference' :: Int -> Int -> Symbol -> Symbol
 reference' line idx sym@Symbol{references} = sym{references = (line, idx):references}
 
 define' :: Int -> Symbol -> Symbol
-define' ofs sym = sym{definedAt = Just ofs}
+define' value sym = sym{value = Just value}
 
 markImported' :: Symbol -> Symbol
 markImported' sym = sym{imported = True}
@@ -58,14 +58,14 @@ markExported name symtab = M.insert name (markExported' (M.findWithDefault empty
 isDefined :: Text -> Symtab -> Bool
 isDefined name symtab = case M.lookup name symtab of
     Nothing -> False
-    Just Symbol{definedAt} -> isJust definedAt
+    Just Symbol{value} -> isJust value
 
 define :: Text -> Int -> Symtab -> Symtab
-define name ofs symtab = M.insert name (define' ofs (M.findWithDefault emptySymbol name symtab)) symtab
+define name val symtab = M.insert name (define' val (M.findWithDefault emptySymbol name symtab)) symtab
 
 undefinedSymbols :: Symtab -> [(Text, Symbol)]
 undefinedSymbols = M.toList . M.filter
-  (\Symbol{definedAt, imported} -> isNothing definedAt && not imported)
+  (\Symbol{value, imported} -> isNothing value && not imported)
 
 unreferencedSymbols :: Symtab -> [(Text, Symbol)]
 unreferencedSymbols = M.toList . M.filter
