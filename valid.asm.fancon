@@ -1,16 +1,7 @@
-. arith: add, sub, div, mul, xor, shf, and, or
-. imm arith addi, subi, divi, muli, xori, shfi, andi, ori
-. jumps: jmp, jgz, jlt, jez
-. imm jumps: jmpi, jgzi, jlti, jezi
-. special: int, brk
-
-. arith: add, div, mul, xor, shf, and, or
-. imm arith divi, muli, xori, shfi, andi, ori
-. jumps: jmp, jgz, jlt, jez
-. imm jumps: jmpi, jgzi, jlti, jezi
-. special: int, brk
+. Just some comment
 
 .import some-external-value
+.import some-external-function
 .export main
 
 .label main
@@ -26,13 +17,12 @@ add r0 2  r0
 sub r0 1  r0
 save r0 400
 saveh r0 200
-jgz r0 another-function
+jgz r0 local-function
 
-.label another-function
+.label local-function
 add r1 some-external-value r1
-jgz r1 and-another-function
+jgz r1 another-local-function
 
-.label and-another-function
+.label another-local-function
 add r0 1 r1
-int
-brk
+jgz r0 some-external-function

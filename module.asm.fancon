@@ -1,0 +1,8 @@
+.export some-external-value
+.export some-external-function
+
+.const some-external-value 42
+
+.label some-external-function
+brk
+int
