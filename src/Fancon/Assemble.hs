@@ -1,13 +1,12 @@
 module Fancon.Assemble (assemble, Symtab) where
 
-import Prelude hiding (lines)
+import Prelude hiding (lines, const)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Polysemy
 import Polysemy.State
 import Control.Monad (mapM_, forM_, forM)
 import Text.Read (readMaybe)
-import Data.Maybe (isJust)
 import Data.Array
 
 import qualified Fancon.Instruction as Ins
@@ -54,6 +53,11 @@ validateAssemblerState :: AssemblerState -> ([Warning], Either [Error] (Symtab, 
 validateAssemblerState AssemblerState{warnings, errors, symbolTable, instructions} =
   (warnings, if not . null $ errors then Left errors else Right (symbolTable, listArray (1, length instructions) instructions))
 
+emitErrorAtCurrentLine :: Member (State AssemblerState) r => (LineNumber -> Error) -> Sem r ()
+emitErrorAtCurrentLine e = do line <- gets significantLineNumber
+                              let err = e line
+                              emitError err
+
 emitError :: Member (State AssemblerState) r => Error -> Sem r ()
 emitError e = modify (\s@AssemblerState{errors} -> s{errors = e:errors})
 
@@ -77,10 +81,9 @@ runAssembler ast = mapM_ assembleLine ast >> validateSymtab
           (P.Command txt) -> command txt >> bumpLineNumber
 
 instruction :: Text -> [P.Operand] -> Sem '[State AssemblerState] ()
-instruction opcodeStr operands = do
-  line <- gets lineNumber
+instruction opcodeStr operands =
   case Ins.validateOpcode opcodeStr of
-    Nothing -> emitError $ InvalidOpcode opcodeStr line
+    Nothing -> emitErrorAtCurrentLine (InvalidOpcode opcodeStr)
     Just opcode -> do
       operands' <- forM (zip [0..] operands) $ \case
         (_, P.Register r)  -> pure $ Ins.Register r
@@ -91,36 +94,36 @@ instruction opcodeStr operands = do
                                  pure $ Ins.Immediate 0
       case Ins.validateInstruction opcode operands' of
         Just ins -> emitInstruction ins
-        Nothing -> emitError $ InvalidOperands operands' line
+        Nothing -> emitErrorAtCurrentLine (InvalidOperands operands')
 
 command :: Text -> Sem '[State AssemblerState] ()
 command txt
   | T.head txt == ' ' = pure ()
   | otherwise =
       case T.words txt of
-        ["label", l] -> do symtab <- gets symbolTable
-                           line <- gets significantLineNumber
-                           if isDefined l symtab
-                           then emitError $ DuplicateSymbolDefinition l line
-                           else do let symtab' = define l line symtab
-                                   modify (\s -> s{symbolTable = symtab'})
+        ["label", l] -> label l
         ["export", l] -> do symtab' <- markExported l <$> gets symbolTable
                             modify (\s -> s{symbolTable = symtab'})
         ["import", l] -> do symtab' <- markImported l <$> gets symbolTable
                             modify (\s -> s{symbolTable = symtab'})
-        ["const", l, sval] ->
-          do symtab <- gets symbolTable
-             line <- gets significantLineNumber
-             if isDefined l symtab
-             then emitError $ DuplicateSymbolDefinition l line
-             else do let val = (readMaybe . T.unpack $ sval) :: Maybe Word
-                     if isJust val
-                     then do let symtab' = define l line symtab
-                             modify (\s -> s{symbolTable = symtab'})
-                     else emitError $ InvalidWord sval line
+        ["const", l, sval] -> const l sval
         _ -> do line <- gets lineNumber
                 emitWarning $ UnknownCommand txt line
 
+label :: Text -> Sem '[State AssemblerState] ()
+label l = const' l =<< gets significantLineNumber
+
+const :: Text -> Text -> Sem '[State AssemblerState] ()
+const l sval = case (readMaybe . T.unpack $ sval) :: Maybe Word of
+                 (Just val) -> const' l (fromIntegral val)
+                 Nothing    -> emitErrorAtCurrentLine (InvalidWord sval)
+
+const' :: Text -> Int -> Sem '[State AssemblerState] ()
+const' l val = do symtab <- gets symbolTable
+                  if isDefined l symtab
+                  then emitErrorAtCurrentLine (DuplicateSymbolDefinition l)
+                  else do let symtab' = define l val symtab
+                          modify (\s -> s{symbolTable = symtab'})
 
 validateSymtab :: Member (State AssemblerState) r => Sem r ()
 validateSymtab = do
