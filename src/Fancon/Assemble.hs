@@ -112,19 +112,20 @@ command txt
                 emitWarning $ UnknownCommand txt line
 
 label :: Text -> Sem '[State AssemblerState] ()
-label l = const' l =<< gets significantLineNumber
+label l = do line <- gets significantLineNumber
+             const' l line True
 
 const :: Text -> Text -> Sem '[State AssemblerState] ()
 const l sval = case (readMaybe . T.unpack $ sval) :: Maybe Word of
-                 (Just val) -> const' l (fromIntegral val)
+                 (Just val) -> const' l (fromIntegral val) False
                  Nothing    -> emitErrorAtCurrentLine (InvalidWord sval)
 
-const' :: Text -> Int -> Sem '[State AssemblerState] ()
-const' l val = do symtab <- gets symbolTable
-                  if isDefined l symtab
-                  then emitErrorAtCurrentLine (DuplicateSymbolDefinition l)
-                  else do let symtab' = define l val symtab
-                          modify (\s -> s{symbolTable = symtab'})
+const' :: Text -> Int -> Bool -> Sem '[State AssemblerState] ()
+const' l val reloc = do symtab <- gets symbolTable
+                        if isDefined l symtab
+                        then emitErrorAtCurrentLine (DuplicateSymbolDefinition l)
+                        else do let symtab' = define l val reloc symtab
+                                modify (\s -> s{symbolTable = symtab'})
 
 validateSymtab :: Member (State AssemblerState) r => Sem r ()
 validateSymtab = do
