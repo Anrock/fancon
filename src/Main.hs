@@ -10,9 +10,9 @@ import Fancon.Parse
 import Fancon.Assemble
 
 main :: IO ()
-main = do
-  fileNames <- getArgs
-  compile fileNames
+main = getArgs >>= \case
+  "compile":fileNames -> compile fileNames
+  _                   -> putStrLn "Unknown command"
 
 compile :: [FilePath] -> IO ()
 compile fileNames =
