@@ -3,8 +3,8 @@ module Main where
 import System.Environment (getArgs)
 import qualified Data.Text.IO as T
 import Text.Megaparsec (errorBundlePretty)
-import Control.Monad (unless)
-import Data.Map (toList)
+import qualified Data.Map as M
+import Control.Monad
 
 import Fancon.Parse
 import Fancon.Assemble
@@ -28,9 +28,10 @@ main = do
                     case assembleResult of
                       Left errors -> putStrLn "Errors: " >> sequence_ (print <$> errors)
                       Right (symtab, instructions) -> do
-                        putStrLn "Symbol table"
-                        sequence_ (print <$> toList symtab)
-                        putStrLn ""
+                        unless (M.null symtab) $ do
+                          putStrLn "Symbol table"
+                          sequence_ (print <$> M.toList symtab)
+                          putStrLn ""
 
                         putStrLn "Instructions: "
                         sequence_ (print <$> zip [1..] instructions)
