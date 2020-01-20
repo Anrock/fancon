@@ -33,6 +33,7 @@ main = do
                           sequence_ (print <$> M.toList symtab)
                           putStrLn ""
 
-                        putStrLn "Instructions: "
-                        sequence_ (print <$> zip [1..] instructions)
-                        putStrLn ""
+                        unless (null instructions) $ do
+                          putStrLn "Instructions: "
+                          sequence_ (print <$> zip [1..] instructions)
+                          putStrLn ""
