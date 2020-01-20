@@ -1,4 +1,4 @@
-module Fancon.Assemble (assemble) where
+module Fancon.Assemble (assemble, Symtab) where
 
 import Prelude hiding (lines)
 import Data.Text (Text)
