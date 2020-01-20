@@ -19,6 +19,7 @@ data Symbol = Symbol { references :: [(Int, Int)]
                      , exported :: Bool
                      , imported :: Bool
                      , value :: Maybe Int
+                     , relocatable :: Bool
                      }
             deriving (Eq, Show)
 
@@ -27,13 +28,14 @@ emptySymbol = Symbol { references = []
                      , exported = False
                      , imported = False
                      , value = Nothing
+                     , relocatable = False
                      }
 
 reference' :: Int -> Int -> Symbol -> Symbol
 reference' line idx sym@Symbol{references} = sym{references = (line, idx):references}
 
-define' :: Int -> Symbol -> Symbol
-define' value sym = sym{value = Just value}
+define' :: Int -> Bool -> Symbol -> Symbol
+define' value reloc sym = sym{value = Just value, relocatable = reloc}
 
 markImported' :: Symbol -> Symbol
 markImported' sym = sym{imported = True}
@@ -60,8 +62,8 @@ isDefined name symtab = case M.lookup name symtab of
     Nothing -> False
     Just Symbol{value} -> isJust value
 
-define :: Text -> Int -> Symtab -> Symtab
-define name val symtab = M.insert name (define' val (M.findWithDefault emptySymbol name symtab)) symtab
+define :: Text -> Int -> Bool -> Symtab -> Symtab
+define name val reloc symtab = M.insert name (define' val reloc (M.findWithDefault emptySymbol name symtab)) symtab
 
 undefinedSymbols :: Symtab -> [(Text, Symbol)]
 undefinedSymbols = M.toList . M.filter
