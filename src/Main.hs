@@ -5,6 +5,7 @@ import qualified Data.Text.IO as T
 import Text.Megaparsec (errorBundlePretty)
 import qualified Data.Map as M
 import Control.Monad
+import Data.Array
 
 import Fancon.Parse
 import Fancon.Assemble
@@ -22,7 +23,7 @@ compile fileNames =
     fileContents <- T.readFile fileName
     case parse fileContents of
       Left e -> putStrLn . errorBundlePretty $ e
-      Right ast -> do sequence_ $ print <$> zip [1 :: Int ..] ast
+      Right ast -> do sequence_ $ print <$> assocs ast
                       putStrLn ""
 
                       let (warnings, assembleResult) = assemble ast
@@ -41,5 +42,5 @@ compile fileNames =
 
                           unless (null instructions) $ do
                             putStrLn "Instructions: "
-                            sequence_ (print <$> zip [1 :: Int ..] instructions)
+                            sequence_ (print <$> assocs instructions)
                             putStrLn ""

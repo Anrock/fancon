@@ -8,6 +8,7 @@ import Polysemy.State
 import Control.Monad (mapM_, forM_, forM)
 import Text.Read (readMaybe)
 import Data.Maybe (isJust)
+import Data.Array
 
 import qualified Fancon.Instruction as Ins
 import qualified Fancon.Parse as P
@@ -44,14 +45,14 @@ initialAssemblerState = AssemblerState { errors = []
                                        , lineNumber = 1
                                        , significantLineNumber = 1}
 
-assemble :: [P.AST] -> ([Warning], Either [Error] (Symtab, [Ins.Instruction]))
+assemble :: Array Int P.AST -> ([Warning], Either [Error] (Symtab, Array Int Ins.Instruction))
 assemble = validateAssemblerState . semChain
-  where semChain :: [P.AST] -> AssemblerState
+  where semChain :: Array Int P.AST -> AssemblerState
         semChain = fst . run . runState initialAssemblerState . runAssembler
 
-validateAssemblerState :: AssemblerState -> ([Warning], Either [Error] (Symtab, [Ins.Instruction]))
+validateAssemblerState :: AssemblerState -> ([Warning], Either [Error] (Symtab, Array Int Ins.Instruction))
 validateAssemblerState AssemblerState{warnings, errors, symbolTable, instructions} =
-  (warnings, if not . null $ errors then Left errors else Right (symbolTable, instructions))
+  (warnings, if not . null $ errors then Left errors else Right (symbolTable, listArray (1, length instructions) instructions))
 
 emitError :: Member (State AssemblerState) r => Error -> Sem r ()
 emitError e = modify (\s@AssemblerState{errors} -> s{errors = e:errors})
@@ -68,7 +69,7 @@ bumpLineNumber = modify (\s@AssemblerState{lineNumber} -> s{lineNumber = succ li
 bumpSignificantLineNumber :: Member (State AssemblerState) r => Sem r ()
 bumpSignificantLineNumber = modify (\s@AssemblerState{significantLineNumber} -> s{significantLineNumber = succ significantLineNumber})
 
-runAssembler :: [P.AST] -> Sem '[State AssemblerState] ()
+runAssembler :: Array Int P.AST -> Sem '[State AssemblerState] ()
 runAssembler ast = mapM_ assembleLine ast >> validateSymtab
   where assembleLine :: P.AST -> Sem '[State AssemblerState] ()
         assembleLine = \case
