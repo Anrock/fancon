@@ -1,4 +1,4 @@
-module Main where
+module Main (main) where
 
 import System.Environment (getArgs)
 import qualified Data.Text.IO as T
