@@ -346,3 +346,7 @@ Will allow to address more than 64k of memory
 ## Add `data` and/or `var` commands to assembler
 `.var var-name var-size` - Reserve `var-size` somewhere in binary and then resolve `var-name` references with its address
 `.data data-name data-value` - Put `data-value` somewhere in binary and then resolve `data-name` references with its address
+
+## Replace `import`/`export` commands with single `global`?
+Pros: less cases to handle in symtab code
+Cons: less flexible?
