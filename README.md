@@ -273,7 +273,7 @@ Operand values are packed depending on `ttt` bits:
 `101`, `110`, `011` - `xxxxxaaa bbbbbbbb bbbbbbbb cccccccc cccccccc`
 `111` - `aaaaaaaa aaaaaaaa bbbbbbbb bbbbbbbb cccccccc cccccccc`
 
-# Questions
+# Questions / TODO
 ## Indirect adressing for registers
 ```
 INSTR    ::= OPCODE SRC DST ARG
