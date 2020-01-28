@@ -8,6 +8,7 @@ import Polysemy.State
 import Control.Monad (mapM_, forM_, forM)
 import Text.Read (readMaybe)
 import Data.Array
+import qualified Data.Map as M
 
 import qualified Fancon.Instruction as Ins
 import qualified Fancon.Parse as P
@@ -128,5 +129,5 @@ const' l val = do symtab <- gets symbolTable
 validateSymtab :: Member (State AssemblerState) r => Sem r ()
 validateSymtab = do
   symtab <- gets symbolTable
-  forM_ (unreferencedSymbols symtab) (\(name, sym) -> emitWarning $ UnreferencedSymbol name sym)
-  forM_ (undefinedSymbols symtab) (\(name, Symbol{references}) -> forM_ references (emitError . UndefinedSymbolReference name . fst))
+  forM_ (M.assocs $ unreferencedSymbols symtab) (\(name, sym) -> emitWarning $ UnreferencedSymbol name sym)
+  forM_ (M.assocs $ undefinedSymbols symtab) (\(name, Symbol{references}) -> forM_ references (emitError . UndefinedSymbolReference name . fst))

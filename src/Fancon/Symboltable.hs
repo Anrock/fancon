@@ -65,10 +65,10 @@ isDefined name symtab = case M.lookup name symtab of
 define :: Text -> Int -> Bool -> Symtab -> Symtab
 define name val reloc symtab = M.insert name (define' val reloc (M.findWithDefault emptySymbol name symtab)) symtab
 
-undefinedSymbols :: Symtab -> [(Text, Symbol)]
-undefinedSymbols = M.toList . M.filter
+undefinedSymbols :: Symtab -> Symtab
+undefinedSymbols = M.filter
   (\Symbol{value, imported} -> isNothing value && not imported)
 
-unreferencedSymbols :: Symtab -> [(Text, Symbol)]
-unreferencedSymbols = M.toList . M.filter
+unreferencedSymbols :: Symtab -> Symtab
+unreferencedSymbols = M.filter
   (\Symbol{exported, references} -> null references && not exported)
