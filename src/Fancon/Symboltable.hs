@@ -13,6 +13,7 @@ module Fancon.Symboltable
   , exports
   , undefineds
   , locals
+  , mangle
   ) where
 
 import qualified Data.Map as M
@@ -91,3 +92,11 @@ applyOffset ofs = fmap (\s@Symbol{relocatable, value, references} ->
   then s
   else s{ value = fmap (+ ofs) value
         , references = fmap (\(l, i) -> (l + ofs, i)) references })
+
+mangle :: Text -> Symtab -> Symtab
+mangle prefix = M.foldrWithKey mangle' M.empty
+  where mangle' name s@Symbol{exported, imported} mangled =
+          if imported || exported
+             then M.insert name s mangled
+             else M.insert (mconcat [prefix, "_", name]) s mangled
+
