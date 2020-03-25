@@ -359,4 +359,6 @@ Cons: less flexible?
 Need a call/ret convention -> need stack convention
 Leave only status bits on devices and check them manually
 Pros: No need for call/ret conventions, can remove dedicated sp register
-Cons: More cumbersome code, but that's all
+Cons:
+  * More cumbersome code.
+  * What about timer? Can use timer device with tick-count and check manually
