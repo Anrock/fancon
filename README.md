@@ -352,3 +352,9 @@ Will allow to address more than 64k of memory
 ## Replace `import`/`export` commands with single `global`?
 Pros: less cases to handle in symtab code
 Cons: less flexible?
+
+## Remove interrupt calls
+Need a call/ret convention -> need stack convention
+Leave only status bits on devices and check them manually
+Pros: No need for call/ret conventions, can remove dedicated sp register
+Cons: More cumbersome code, but that's all
