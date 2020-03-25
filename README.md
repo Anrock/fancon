@@ -309,7 +309,9 @@ Cons: Bit-fiddling to get a byte, gotta rework all memmap, probably API too, all
 ## Memory mapped devices / Remove syscalls
 We actually don't have any system desu
 Pros: more bare-metal
-Cons: gotta do something with memory - can't address all those
+Cons:
+  * Gotta do something with memory - can't address all those. 
+    Can be mitigated by DMA for storage/cartridge and replacing screenbuffer with paint pixel command for GPU
 
 Cartidge:
   Present: bit
