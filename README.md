@@ -362,3 +362,8 @@ Pros: No need for call/ret conventions, can remove dedicated sp register
 Cons:
   * More cumbersome code.
   * What about timer? Can use timer device with tick-count and check manually
+
+## Battery-backed RAM on cartridge
+Like Gameboy does. Use it for saves instead of storage device.
+Pros: game-level isolation
+Cons (?): modifying cartridge file
