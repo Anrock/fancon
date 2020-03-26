@@ -346,6 +346,10 @@ Input:
 ## Add offset argument to memory instructions
 Ex: save r2 40000 65000
 Will allow to address more than 64k of memory
+Or
+loadl/loadh/savel/saveh separate instruction.
+Basically load/save with fixed offset of 0 for low and FFFF for high.
+Much simpler than arbitrary offset
 
 ## Add `data` and/or `var` commands to assembler
 `.var var-name var-size` - Reserve `var-size` somewhere in binary and then resolve `var-name` references with its address
