@@ -367,6 +367,10 @@ Cons:
   * More cumbersome code.
   * What about timer? Can use timer device with tick-count and check manually
 
+Or
+Interrupt controller mmap. Holds interrupt masks, stores PC on interupt and
+holds interupt handlers vector
+
 ## Battery-backed RAM on cartridge
 Like Gameboy does. Use it for saves instead of storage device.
 Pros: game-level isolation
