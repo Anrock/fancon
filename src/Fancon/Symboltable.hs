@@ -7,7 +7,7 @@ module Fancon.Symboltable
   , reference
   , markImported
   , markExported
-  , unreferencedSymbols
+  , unreferenced
   , applyOffset
   , undefineds
   ) where
@@ -66,10 +66,9 @@ isDefined name symtab = case M.lookup name symtab of
 define :: Text -> Int -> Bool -> Symtab -> Symtab
 define name val reloc symtab = M.insert name (define' val reloc (M.findWithDefault emptySymbol name symtab)) symtab
 
+unreferenced :: Symtab -> Symtab
+unreferenced = M.filter (null . references)
 
-unreferencedSymbols :: Symtab -> Symtab
-unreferencedSymbols = M.filter
-  (\Symbol{exported, references} -> null references && not exported)
 
 undefineds :: Symtab -> Symtab
 undefineds = M.filter (isNothing . value)
