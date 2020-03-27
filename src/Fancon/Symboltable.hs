@@ -12,9 +12,11 @@ module Fancon.Symboltable
   , imports
   , exports
   , undefineds
+  , locals
   ) where
 
 import qualified Data.Map as M
+import Data.Map ((\\))
 import Data.Text (Text)
 import Data.Maybe (isJust, isNothing)
 
@@ -76,6 +78,9 @@ imports = M.filter imported
 
 exports :: Symtab -> Symtab
 exports = M.filter exported
+
+locals :: Symtab -> Symtab
+locals s = s \\ imports s \\ exports s
 
 undefineds :: Symtab -> Symtab
 undefineds = M.filter (isNothing . value)
