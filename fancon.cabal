@@ -17,6 +17,7 @@ executable fancon
                       , Fancon.Parse
                       , Fancon.Assemble
                       , Fancon.Symboltable
+                      , Fancon.Link
   ghc-options:        -O2 -flate-specialise -fspecialise-aggressively
                       -fplugin=Polysemy.Plugin
                       -threaded
