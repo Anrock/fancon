@@ -9,6 +9,7 @@ module Fancon.Symboltable
   , markExported
   , undefinedSymbols
   , unreferencedSymbols
+  , applyOffset
   ) where
 
 import qualified Data.Map as M
@@ -72,3 +73,10 @@ undefinedSymbols = M.filter
 unreferencedSymbols :: Symtab -> Symtab
 unreferencedSymbols = M.filter
   (\Symbol{exported, references} -> null references && not exported)
+
+applyOffset :: Int -> Symtab -> Symtab
+applyOffset ofs = fmap (\s@Symbol{relocatable, value, references} ->
+  if not relocatable
+  then s
+  else s{ value = fmap (+ ofs) value
+        , references = fmap (\(l, i) -> (l + ofs, i)) references })
