@@ -252,7 +252,9 @@ Commands:
 | and      | r/i | r/i | r   |
 | or       | r/i | r/i | r   |
 | save     | r/i | r/i |     | Write A to mem[B]
+| saveh    | r/i | r/i |     | Write A to mem[0xFFFF + B]
 | load     | r/i | r   |     | Write mem[A] to register B
+| loadh    | r/i | r   |     | Write mem[0xFFFF + A] to register B
 | jgz      | r   | r/i |     | Jump to mem[B] if A is >0
 | jlt      | r   | r/i |     | Jump to mem[B] if A is <0
 | jez      | r   | r/i |     | Jump to mem[B] if A is 0
@@ -342,14 +344,6 @@ Input:
   Pressed: bit
   Mask interrupt: bit
   Char: 7 bit
-
-## Add offset argument to memory instructions
-Ex: save r2 40000 65000
-Will allow to address more than 64k of memory
-Or
-loadl/loadh/savel/saveh separate instruction.
-Basically load/save with fixed offset of 0 for low and FFFF for high.
-Much simpler than arbitrary offset
 
 ## Add `data` and/or `var` commands to assembler
 `.var var-name var-size` - Reserve `var-size` somewhere in binary and then resolve `var-name` references with its address
