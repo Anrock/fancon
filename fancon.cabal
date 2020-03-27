@@ -52,6 +52,7 @@ executable fancon
                       , BinaryLiterals
                       , NumericUnderscores
                       , BlockArguments
+                      , RecordWildCards
   build-depends:        base >= 4.7 && < 5
                       , array
                       , containers
