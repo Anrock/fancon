@@ -9,6 +9,7 @@ module Fancon.Symboltable
   , markExported
   , unreferenced
   , applyOffset
+  , imports
   , undefineds
   ) where
 
@@ -69,6 +70,8 @@ define name val reloc symtab = M.insert name (define' val reloc (M.findWithDefau
 unreferenced :: Symtab -> Symtab
 unreferenced = M.filter (null . references)
 
+imports :: Symtab -> Symtab
+imports = M.filter imported
 
 undefineds :: Symtab -> Symtab
 undefineds = M.filter (isNothing . value)
