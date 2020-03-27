@@ -10,6 +10,7 @@ module Fancon.Symboltable
   , unreferenced
   , applyOffset
   , imports
+  , exports
   , undefineds
   ) where
 
@@ -72,6 +73,9 @@ unreferenced = M.filter (null . references)
 
 imports :: Symtab -> Symtab
 imports = M.filter imported
+
+exports :: Symtab -> Symtab
+exports = M.filter exported
 
 undefineds :: Symtab -> Symtab
 undefineds = M.filter (isNothing . value)
