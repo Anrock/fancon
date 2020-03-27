@@ -131,5 +131,5 @@ const' l val reloc = do symtab <- gets symbolTable
 validateSymtab :: Member (State AssemblerState) r => Sem r ()
 validateSymtab = do
   symtab <- gets symbolTable
-  forM_ (M.assocs $ unreferencedSymbols symtab) (\(name, sym) -> emitWarning $ UnreferencedSymbol name sym)
-  forM_ (M.assocs $ undefinedSymbols symtab) (\(name, Symbol{references}) -> forM_ references (emitError . UndefinedSymbolReference name . fst))
+  forM_ (M.assocs $ unreferenced symtab) (\(name, sym) -> emitWarning $ UnreferencedSymbol name sym)
+  forM_ (M.assocs $ undefineds symtab) (\(name, Symbol{references}) -> forM_ references (emitError . UndefinedSymbolReference name . fst))
