@@ -1,4 +1,4 @@
-module Fancon.Assemble (assemble, Symtab) where
+module Fancon.Assemble (assemble, Symtab, Module) where
 
 import Prelude hiding (lines, const)
 import Data.Text (Text)
@@ -17,6 +17,7 @@ import Fancon.Symboltable
 type SymbolName = Text
 type LineNumber = Int
 type CommandText = Text
+type Module = (Symtab, Array Int Ins.Instruction)
 
 data Warning = UnknownCommand CommandText LineNumber
              | UnreferencedSymbol SymbolName Symbol
@@ -45,12 +46,12 @@ initialAssemblerState = AssemblerState { errors = []
                                        , lineNumber = 1
                                        , significantLineNumber = 1}
 
-assemble :: Array Int P.AST -> ([Warning], Either [Error] (Symtab, Array Int Ins.Instruction))
+assemble :: Array Int P.AST -> ([Warning], Either [Error] Module)
 assemble = validateAssemblerState . semChain
   where semChain :: Array Int P.AST -> AssemblerState
         semChain = fst . run . runState initialAssemblerState . runAssembler
 
-validateAssemblerState :: AssemblerState -> ([Warning], Either [Error] (Symtab, Array Int Ins.Instruction))
+validateAssemblerState :: AssemblerState -> ([Warning], Either [Error] Module)
 validateAssemblerState AssemblerState{warnings, errors, symbolTable, instructions} =
   (warnings, if not . null $ errors then Left errors else Right (symbolTable, listArray (1, length instructions) instructions))
 
