@@ -11,6 +11,7 @@ module Fancon.Symboltable
   , applyOffset
   , imports
   , exports
+  , defined
   , undefineds
   , locals
   , mangle
@@ -85,6 +86,9 @@ locals s = s \\ imports s \\ exports s
 
 undefineds :: Symtab -> Symtab
 undefineds = M.filter (isNothing . value)
+
+defined :: Symtab -> Symtab
+defined = M.filter (isJust . value)
 
 applyOffset :: Int -> Symtab -> Symtab
 applyOffset ofs = fmap (\s@Symbol{relocatable, value, references} ->
