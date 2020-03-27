@@ -5,11 +5,9 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Polysemy
 import Polysemy.State
-import Control.Monad (mapM_, forM_, forM)
+import Control.Monad (mapM_, forM)
 import Text.Read (readMaybe)
 import Data.Array
-import qualified Data.Map as M
-import qualified Data.Set as S
 
 import qualified Fancon.Instruction as Ins
 import qualified Fancon.Parse as P
@@ -75,7 +73,7 @@ bumpSignificantLineNumber :: Member (State AssemblerState) r => Sem r ()
 bumpSignificantLineNumber = modify (\s@AssemblerState{significantLineNumber} -> s{significantLineNumber = succ significantLineNumber})
 
 runAssembler :: Array Int P.AST -> Sem '[State AssemblerState] ()
-runAssembler ast = mapM_ assembleLine ast >> validateSymtab
+runAssembler = mapM_ assembleLine
   where assembleLine :: P.AST -> Sem '[State AssemblerState] ()
         assembleLine = \case
           (P.Instruction opcode operands) -> instruction opcode operands >> bumpLineNumber >> bumpSignificantLineNumber
@@ -125,16 +123,3 @@ defineFirstOrError name f = do symtab <- gets symbolTable
                                if isDefined name symtab
                                then emitErrorAtCurrentLine (DuplicateSymbolDefinition name)
                                else modify (\s -> s{symbolTable = f symtab})
-
-validateSymtab :: Member (State AssemblerState) r => Sem r ()
-validateSymtab = do
-  symtab <- gets symbolTable
-  let unusedSymbols = S.toList (unusedLocals symtab) ++ S.toList (unusedImports symtab)
-      undefinedSymbols = S.toList (undefinedLocals symtab) ++ S.toList (undefinedExports symtab)
-
-  forM_ unusedSymbols (\name -> let definition = definedAt $ local symtab M.! name in
-                                    emitWarning $ UnreferencedSymbol name definition)
-
-  forM_ undefinedSymbols (\name -> let refs = references symtab M.! name in
-    forM_ refs (\(line, _) ->
-      emitError $ UndefinedSymbolReference name line))
