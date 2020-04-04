@@ -4,11 +4,13 @@ import System.Environment (getArgs)
 import qualified Data.Text.IO as T
 import Text.Megaparsec (errorBundlePretty)
 import qualified Data.Map as M
+import qualified Data.Set as S
 import Control.Monad
 import Data.Array
 
 import Fancon.Parse
 import Fancon.Assemble
+import Fancon.Symboltable
 
 main :: IO ()
 main = getArgs >>= \case
@@ -35,12 +37,20 @@ compile fileNames =
                       case assembleResult of
                         Left errors -> putStrLn "Errors: " >> sequence_ (print <$> errors)
                         Right (symtab, instructions) -> do
-                          unless (M.null symtab) $ do
-                            putStrLn "Symbol table"
-                            sequence_ (print <$> M.toList symtab)
-                            putStrLn ""
+                          printSymbolTable symtab
 
                           unless (null instructions) $ do
                             putStrLn "Instructions: "
                             sequence_ (print <$> assocs instructions)
                             putStrLn ""
+
+printSymbolTable :: SymbolTable -> IO ()
+printSymbolTable symtab =
+  do putStr "Symbol table"
+     putStrLn "Exports:"
+     sequence_ $ print <$> S.toList (exports symtab)
+     putStrLn "Imports:"
+     sequence_ $ print <$> S.toList (imports symtab)
+     putStrLn "Locals:"
+     sequence_ $ print <$> M.toList (local symtab)
+

@@ -1,106 +1,102 @@
 module Fancon.Symboltable
   ( Symbol(..)
-  , Symtab
-  , emptySymtab
-  , define
-  , isDefined
-  , reference
-  , markImported
-  , markExported
-  , unreferenced
-  , applyOffset
-  , imports
+  , SymbolName
+  , SymbolTable
+
+  , LineIx
+  , OpIx
+  , SymbolReference
+
   , exports
-  , defined
-  , undefineds
-  , locals
-  , mangle
+  , imports
+  , local
+  , references
+
+  , emptySymbolTable
+
+  , addConstant
+  , addExport
+  , addImport
+  , addLocation
+  , addReference
+
+  , isDefined
+
+  , importNameCollisions
+  , undefinedExports
+  , undefinedLocals
+  , unusedImports
+  , unusedLocals
   ) where
 
 import qualified Data.Map as M
-import Data.Map ((\\))
+import qualified Data.Set as S
+import Data.Set ((\\))
 import Data.Text (Text)
-import Data.Maybe (isJust, isNothing)
+import Data.List.NonEmpty
 
-data Symbol = Symbol { references :: [(Int, Int)]
-                     , exported :: Bool
-                     , imported :: Bool
-                     , value :: Maybe Int
-                     , relocatable :: Bool
-                     }
+type SymbolName = Text
+data Symbol = Location { value :: Int }
+            | Constant { value :: Int }
             deriving (Eq, Show)
 
-emptySymbol :: Symbol
-emptySymbol = Symbol { references = []
-                     , exported = False
-                     , imported = False
-                     , value = Nothing
-                     , relocatable = False
-                     }
+type LineIx = Int
+type OpIx = Int
+type SymbolReference = (LineIx, OpIx)
 
-reference' :: Int -> Int -> Symbol -> Symbol
-reference' line idx sym@Symbol{references} = sym{references = (line, idx):references}
+data SymbolTable = SymbolTable { local :: M.Map SymbolName Symbol
+                               , exports :: S.Set SymbolName
+                               , imports :: S.Set SymbolName
+                               , references :: M.Map SymbolName (NonEmpty SymbolReference)
+                               } deriving (Eq, Show)
 
-define' :: Int -> Bool -> Symbol -> Symbol
-define' value reloc sym = sym{value = Just value, relocatable = reloc}
+emptySymbolTable :: SymbolTable
+emptySymbolTable = SymbolTable { local = M.empty
+                               , exports = S.empty
+                               , imports = S.empty
+                               , references = M.empty
+                               }
 
-markImported' :: Symbol -> Symbol
-markImported' sym = sym{imported = True}
+localNameSet :: SymbolTable -> S.Set SymbolName
+localNameSet SymbolTable{ local } = S.fromDistinctAscList (M.keys local)
 
-markExported' :: Symbol -> Symbol
-markExported' sym = sym{exported = True}
+referencesNameSet :: SymbolTable -> S.Set SymbolName
+referencesNameSet SymbolTable { references } = S.fromDistinctAscList (M.keys references)
 
-type Symtab = M.Map Text Symbol
+addReference :: SymbolName -> SymbolReference -> SymbolTable -> SymbolTable
+addReference sym ref symtab = symtab{references = references'}
+  where references' = M.insertWith (<>) sym (Data.List.NonEmpty.fromList [ref]) (references symtab)
 
-emptySymtab :: Symtab
-emptySymtab = M.empty
+addExport :: SymbolName -> SymbolTable -> SymbolTable
+addExport sym s = s{exports = exports'}
+  where exports' = S.insert sym (exports s)
 
-reference :: Text -> Int -> Int -> Symtab -> Symtab
-reference name line idx symtab = M.insert name (reference' line idx (M.findWithDefault emptySymbol name symtab)) symtab
+addImport :: SymbolName -> SymbolTable -> SymbolTable
+addImport sym s = s{imports = imports'}
+  where imports' = S.insert sym (imports s)
 
-markImported :: Text -> Symtab -> Symtab
-markImported name symtab = M.insert name (markImported' (M.findWithDefault emptySymbol name symtab)) symtab
+addLocation :: SymbolName -> Int -> SymbolTable -> SymbolTable
+addLocation sym val s = s{local = local'}
+  where local' = M.insert sym (Location val) (local s)
 
-markExported :: Text -> Symtab -> Symtab
-markExported name symtab = M.insert name (markExported' (M.findWithDefault emptySymbol name symtab)) symtab
+addConstant :: SymbolName -> Int -> SymbolTable -> SymbolTable
+addConstant sym val s = s{local = local'}
+  where local' = M.insert sym (Constant val) (local s)
 
-isDefined :: Text -> Symtab -> Bool
-isDefined name symtab = case M.lookup name symtab of
-    Nothing -> False
-    Just Symbol{value} -> isJust value
+isDefined :: SymbolName -> SymbolTable -> Bool
+isDefined sym s = M.member sym (local s)
 
-define :: Text -> Int -> Bool -> Symtab -> Symtab
-define name val reloc symtab = M.insert name (define' val reloc (M.findWithDefault emptySymbol name symtab)) symtab
+unusedLocals :: SymbolTable -> S.Set SymbolName
+unusedLocals s = localNameSet s \\ referencesNameSet s \\ exports s
 
-unreferenced :: Symtab -> Symtab
-unreferenced = M.filter (null . references)
+unusedImports :: SymbolTable -> S.Set SymbolName
+unusedImports s@SymbolTable{ imports } = imports \\ referencesNameSet s
 
-imports :: Symtab -> Symtab
-imports = M.filter imported
+undefinedLocals :: SymbolTable -> S.Set SymbolName
+undefinedLocals s = referencesNameSet s \\ localNameSet s
 
-exports :: Symtab -> Symtab
-exports = M.filter exported
+undefinedExports :: SymbolTable -> S.Set SymbolName
+undefinedExports s@SymbolTable { exports } = exports \\ localNameSet s
 
-locals :: Symtab -> Symtab
-locals s = s \\ imports s \\ exports s
-
-undefineds :: Symtab -> Symtab
-undefineds = M.filter (isNothing . value)
-
-defined :: Symtab -> Symtab
-defined = M.filter (isJust . value)
-
-applyOffset :: Int -> Symtab -> Symtab
-applyOffset ofs = fmap (\s@Symbol{relocatable, value, references} ->
-  if not relocatable
-  then s
-  else s{ value = fmap (+ ofs) value
-        , references = fmap (\(l, i) -> (l + ofs, i)) references })
-
-mangle :: Text -> Symtab -> Symtab
-mangle prefix = M.foldrWithKey mangle' M.empty
-  where mangle' name s@Symbol{exported, imported} mangled =
-          if imported || exported
-             then M.insert name s mangled
-             else M.insert (mconcat [prefix, "_", name]) s mangled
-
+importNameCollisions :: SymbolTable -> S.Set SymbolName
+importNameCollisions s@SymbolTable { imports } = S.intersection (localNameSet s) imports

@@ -1,4 +1,4 @@
-module Fancon.Assemble (assemble, Symtab, Module) where
+module Fancon.Assemble (assemble, SymbolTable, Module) where
 
 import Prelude hiding (lines, const)
 import Data.Text (Text)
@@ -9,31 +9,30 @@ import Control.Monad (mapM_, forM_, forM)
 import Text.Read (readMaybe)
 import Data.Array
 import qualified Data.Map as M
+import qualified Data.Set as S
 
 import qualified Fancon.Instruction as Ins
 import qualified Fancon.Parse as P
 import Fancon.Symboltable
 
-type SymbolName = Text
-type LineNumber = Int
 type CommandText = Text
-type Module = (Symtab, Array Int Ins.Instruction)
+type Module = (SymbolTable, Array Int Ins.Instruction)
 
-data Warning = UnknownCommand CommandText LineNumber
-             | UnreferencedSymbol SymbolName Symbol
+data Warning = UnknownCommand CommandText LineIx
+             | UnreferencedSymbol SymbolName LineIx
   deriving (Show, Eq)
 
-data Error = DuplicateSymbolDefinition SymbolName LineNumber
-           | UndefinedSymbolReference SymbolName LineNumber
-           | InvalidWord Text LineNumber
-           | InvalidOpcode Text LineNumber
-           | InvalidOperands [Ins.Operand] LineNumber
+data Error = DuplicateSymbolDefinition SymbolName LineIx
+           | UndefinedSymbolReference SymbolName LineIx
+           | InvalidWord Text LineIx
+           | InvalidOpcode Text LineIx
+           | InvalidOperands [Ins.Operand] LineIx
   deriving (Show, Eq)
 
 data AssemblerState = AssemblerState { errors :: [Error]
                                      , warnings :: [Warning]
                                      , instructions :: [Ins.Instruction]
-                                     , symbolTable :: Symtab
+                                     , symbolTable :: SymbolTable
                                      , lineNumber :: Int
                                      , significantLineNumber :: Int
                                      }
@@ -42,7 +41,7 @@ initialAssemblerState :: AssemblerState
 initialAssemblerState = AssemblerState { errors = []
                                        , warnings = []
                                        , instructions = []
-                                       , symbolTable = emptySymtab
+                                       , symbolTable = emptySymbolTable
                                        , lineNumber = 1
                                        , significantLineNumber = 1}
 
@@ -55,7 +54,7 @@ validateAssemblerState :: AssemblerState -> ([Warning], Either [Error] Module)
 validateAssemblerState AssemblerState{warnings, errors, symbolTable, instructions} =
   (warnings, if not . null $ errors then Left errors else Right (symbolTable, listArray (1, length instructions) instructions))
 
-emitErrorAtCurrentLine :: Member (State AssemblerState) r => (LineNumber -> Error) -> Sem r ()
+emitErrorAtCurrentLine :: Member (State AssemblerState) r => (LineIx -> Error) -> Sem r ()
 emitErrorAtCurrentLine e = do line <- gets significantLineNumber
                               let err = e line
                               emitError err
@@ -90,8 +89,8 @@ instruction opcodeStr operands =
       operands' <- forM (zip [0..] operands) $ \case
         (_, P.Register r)  -> pure $ Ins.Register r
         (_, P.Immediate i) -> pure $ Ins.Immediate i
-        (ix, P.Label l)    -> do (symtab, sigLine) <- (,) <$> gets symbolTable <*> gets significantLineNumber
-                                 let symtab' = reference l sigLine ix symtab
+        (opIx, P.Label l)  -> do (symtab, lineIx) <- (,) <$> gets symbolTable <*> gets significantLineNumber
+                                 let symtab' = addReference l (lineIx, opIx) symtab
                                  modify (\s -> s{symbolTable = symtab'})
                                  pure $ Ins.Immediate 0
       case Ins.validateInstruction opcode operands' of
@@ -104,32 +103,38 @@ command txt
   | otherwise =
       case T.words txt of
         ["label", l] -> label l
-        ["export", l] -> do symtab' <- markExported l <$> gets symbolTable
+        ["export", l] -> do symtab' <- addExport l <$> gets symbolTable
                             modify (\s -> s{symbolTable = symtab'})
-        ["import", l] -> do symtab' <- markImported l <$> gets symbolTable
+        ["import", l] -> do symtab' <- addImport l <$> gets symbolTable
                             modify (\s -> s{symbolTable = symtab'})
         ["const", l, sval] -> const l sval
         _ -> do line <- gets lineNumber
                 emitWarning $ UnknownCommand txt line
 
 label :: Text -> Sem '[State AssemblerState] ()
-label l = do line <- gets significantLineNumber
-             const' l line True
+label l = do location <- gets significantLineNumber
+             defineFirstOrError l (addLocation l location)
 
 const :: Text -> Text -> Sem '[State AssemblerState] ()
 const l sval = case (readMaybe . T.unpack $ sval) :: Maybe Word of
-                 (Just val) -> const' l (fromIntegral val) False
+                 (Just val) -> defineFirstOrError l (addConstant l (fromIntegral val))
                  Nothing    -> emitErrorAtCurrentLine (InvalidWord sval)
 
-const' :: Text -> Int -> Bool -> Sem '[State AssemblerState] ()
-const' l val reloc = do symtab <- gets symbolTable
-                        if isDefined l symtab
-                        then emitErrorAtCurrentLine (DuplicateSymbolDefinition l)
-                        else do let symtab' = define l val reloc symtab
-                                modify (\s -> s{symbolTable = symtab'})
+defineFirstOrError :: SymbolName -> (SymbolTable -> SymbolTable) -> Sem '[State AssemblerState] ()
+defineFirstOrError name f = do symtab <- gets symbolTable
+                               if isDefined name symtab
+                               then emitErrorAtCurrentLine (DuplicateSymbolDefinition name)
+                               else modify (\s -> s{symbolTable = f symtab})
 
 validateSymtab :: Member (State AssemblerState) r => Sem r ()
 validateSymtab = do
   symtab <- gets symbolTable
-  forM_ (M.assocs $ unreferenced symtab) (\(name, sym) -> emitWarning $ UnreferencedSymbol name sym)
-  forM_ (M.assocs $ undefineds symtab) (\(name, Symbol{references}) -> forM_ references (emitError . UndefinedSymbolReference name . fst))
+  let unusedSymbols = S.toList (unusedLocals symtab) ++ S.toList (unusedImports symtab)
+      undefinedSymbols = S.toList (undefinedLocals symtab) ++ S.toList (undefinedExports symtab)
+
+  forM_ unusedSymbols (\name -> let definition = definedAt $ local symtab M.! name in
+                                    emitWarning $ UnreferencedSymbol name definition)
+
+  forM_ undefinedSymbols (\name -> let refs = references symtab M.! name in
+    forM_ refs (\(line, _) ->
+      emitError $ UndefinedSymbolReference name line))
