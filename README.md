@@ -313,3 +313,7 @@ Embed game cartridge binary into template
    | ____v0.1____ |
    +------------- +
 ```
+
+## 16 registers
+2 bits in instruction byte for register indexes are unused.
+Make indexes 4 bit and allow to address 16 registers
