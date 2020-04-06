@@ -242,21 +242,6 @@ int      |     |     |     | Interrupt
 brk      |     |     |     | Break
 
 # Questions / TODO
-## Indirect adressing for registers
-```
-INSTR    ::= OPCODE SRC DST ARG
-OPCODE   ::= 0..255
-SRC      ::= REG
-DST      ::= REG
-REG      ::= MODE REGN
-MODE     ::= DIRECT | INDIRECT
-DIRECT   ::= 1
-INDIRECT ::= 0
-ARG      ::= REG | IMM
-IMM      ::= 0..65535
-REGN     ::= 0..7
-```
-Same 20 or 32 bits instruction length but can also have indirect adressing
 
 ## Gamepad layout
 
