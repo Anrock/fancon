@@ -1,307 +1,68 @@
 # Fantasy console
 
 # Table of contents
-* [Memory map](#Memory-map)
-* [Registers](#registers)
-* [API](#API)
-  * [Call convention](#Call-convention)
-  * [Cartridge](#Cartridge)
-  * [Graphics](#Graphics)
-  * [Storage](#Storage)
-  * [Output](#Output)
-* [Cartridges](#Cartridges)
-  * [System cartridge](#System-cartridge)
-    * [Code editor](#Code-editor)
-    * [Sprite editor](#Sprite-editor)
-    * [Console](#Console)
-* [Questions](#Questions)
+* [Hardware](#Hardware)
+  * [CPU](#CPU)
+    * [Registers](#Registers)
+    * [Binary instruction format](#Binary-instruction-format)
+  * [Memory map](#Memory-map)
+  * [Devices](#Devices)
+    * [Interrupt controller](#Interrupt-controller)
+    * [Cartridge controller](#Cartridge-controller)
+    * [GPU](#GPU)
+      * [GPU commands reference](#GPU-commands-reference)
+    * [Input controller](#Input-controller)
+    * [RAM](#RAM)
+* [Software](#Software)
+  * [Assembly](#Assembly)
+* [Questions](#Questions--TODO)
 
-# Memory map
-Description                         | Size / Bits  | Mod
------------------------------------ | ------------ | ---
-Display, Input, Cartridge           | xxxx xDIC    | r--
-Pressed, Char                       | P CCCCCCC    | r--
-Breakpoint, Cartridge, Input, Timer | BCIT bcit    | rw-
-Handler addr                        | 1            | -w-
-VRAM map                            | 16432 / 8944 | rw-
+# Hardware
 
+## CPU
 
-Graphic mode VRAM | Size  | Mod | Note
------------------ | ----- | --- | ----
-Pallete           | 48    | rw- | 16 RGB colors
-Sprite map        | 8192  | rw- | 256 8x8 sprites, each pixel is color index
-Sprite map        | 8192  | rw- | 256 8x8 sprites, each pixel is color index
+### Registers
+* 16 bits wide
+* R0..R7 - general purpose, RW
+* R0 always reads 0, no effect on write
+* PC - program counter, RO
+* SP - stack pointer, RW
 
-Text mode VRAM | Size | Mod | Note
--------------- | ---- | --- | ----
-Palette        | 48   | rw- | 16 RGB colors
-Font map       | 4096 | rw- | 256 symbols * 8*16 dots
-Text buffer    | 4800 | rw- | char byte + fg color + bg color
+### Binary instruction format
 
-Cartridge     | Size | Mod | Note
-------------- | ---- | --- | ----
-Palette       | 48   | rw- | Mapped to VRAM palette
-Graphics data |      | rw- |
-code          |      | r-x | Mapped to RAM
+First instruction byte: `ooooottt`
 
-# Registers
-r0..r7, flags, pc, sp
-
-r0 always reads 0
-
-Flags: 0, <0, >0
-
-# API
-## Interrupts
-Program can alter flags in interrupt mask to mask or unmask interupts
-
-When interrupt happens CPU will:
-1. Set corresponding flag in interrupt state
-2. Push PC to stack
-3. Push registers to stack in reverse order (r8..r1)
-4. Jump to interrupt handler address
-
-Interrupt handler subroutine should:
-1. (Optional) Check interrupt state to determine a type of interrupt
-2. (Optional) Handle the interrupt
-3. Unset interrupt bits in interrupt state
-4. Restore registers from stack (r1..r8)
-5. Jump to PC saved on stack after registers
-
-## System calls
-To make a sys call
-1. Put interrupt number to `r1`
-2. Put args in (`r2`..`r7`) in direct order
-3. Execute int opcode
-4. Read result from `r1`
-
-mnemonic | r1 | r2  | r3  | r4  | r5 | r6
--------- | -- | --- | --- | --- | -- | --
-cart     | 0  |     |     |     |    |
-burn     | 1  | src | dst | len |    |
-sprite   | 2  | idx | x   | y   |    |
-line     | 3  | idx | x1  | y1  | x2 | y2
-fill     | 4  | idx | x1  | y1  | x2 | y2
-scroll   | 5  | idx | x   | y   |    |
-mode     | 6  |     |     |     |    |
-save     | 7  | len | src | dst |    |
-load     | 8  | len | src | dst |    |
-peek     | 9  | src |     |     |    |
-bank     | 10 | idx |     |     |    |
-out      | 11 | len | src |     |    |
-
-### Cartridge
-**cart**
-
-Map external cartridge memory to ram
-
-Does nothing if external cartridge is not inserted
-
-**burn: src, dst, len**
-
-Burn `len` bytes from `RAM[<src>]` to `dst` of external cartridge
-
-Will issue a memory fault if any byte in range `[src, src + len]` isn't readable
-
-### Graphics
-**sprite: index (0..511), x (0..319), y (0..239)**
-
-Blit sprite with `index` to `(x,y)` pixel. Where `(x,y)` is top-left corner
-
-Will issue a gfx fault if any of arguments have invalid value
-
-**line: x1 (0..319), y1 (0..239), x2 (0..319), y2 (0..239), color (0..15)**
-
-Draw a `pallete[color]` line from `(x1,y1)` to `(x2,y2)`
-
-Will issue a gfx fault if any of arguments have invalid values
-
-**fill: x1 (0..319), y1 (0..239), x2 (0..319), y2 (0..239), color (0..15)**
-
-Draw a rectangle filled with `palette[color]`
-with top level corner `(x1,y1)` and right bottom corner at `(x2,y2)`
-
-Will issue a gfx fault if any of arguments have invalid values
-
-**scroll: color, x (signed), y (signed)**
-
-Scroll screen to horizontally by `x` and vertically by `y`, filling new space with `color`
-
-**mode**
-
-Toggle video mode from text to graphics or vice versa.
-
-### Storage
-**save: src (>=RAM), storage, len**
-
-Write `len` bytes from `RAM[src]` to `storage`
-
-Will issue a memory fault if any byte in range `[src, src + len]` isn't readable
-
-**load: src, dst, len**
-
-Write `len` bytes from `storage[src]` to `RAM[dst]`
-
-Will issue a memory fault if any byte in range `[dst, dst + len]` isn't writable
-
-**peek: src**
-
-Write `storage[src]` to `r1`
-
-**bank**: idx
-
-Switch storage bank to `idx`
-
-### Output
-**out: src, len**
-
-Output `len` bytes starting with `src`
-
-Will issue a memory fault if any byte in range `[src, src + len]` isn't readable
-
-# Cartridges
-## System cartridge
-### Code editor
-bytes left count, follow jump, outline?, basic vim bindings
-### Sprite editor
-Copy TIC80, add font mode
-### Console
-Help command
-Code editor
-Sprite editor
-Cartridge API
-
-### Debug mode
-#### Projects
-Cartridge name + save bookmarks
-#### Code view
-Show opcodes, registers, stack memory, PC pointer
-#### Memory view
-* Bookmarks list
-  * Custom: addr + view mode
-  * VRAM
-  * RAM
-* Raw
-* Opcodes
-* Font
-* Sprite (size multiplyer)
-
-## Cartridge creation
-Some template png
-Embed game cartridge binary into template
-```
-   /--------------\ <- sloped
-   |xx|xx|xx|xx|xx|
-   |xx|xx|xx|xx|xx| <- contact pads, embed code on them
-   |xx|xx|xx|xx|xx|
-   |              |
-   | __Game______ | <- sticker like area for text
-   | ___name_____ |
-   | ____v0.1____ |
-   +------------- +
-```
-
-# Assembly
-## Syntax
-`<instruction>`
-`.<command>`
-
-Commands:
-  * label <label> - mark next instruction address as <label>
-  * export <label> - make <label> available to use in another files
-  * import <label> - use <label> address from another file
-  * const <name> <val> - define constant value of <val> named <name>
-  * <empty> - ignore everything until eol, used as comment
-
-## Instructions
-Mnemonic | A   | B   | C   | Note
--------- | --- | --- | --- | ----
-add      | r/i | r/i | r   |
-sub      | r/i | r/i | r   |
-div      | r/i | r/i | r   |
-mul      | r/i | r/i | r   |
-xor      | r/i | r/i | r   |
-shf      | r/i | r/i | r   |
-and      | r/i | r/i | r   |
-or       | r/i | r/i | r   |
-save     | r/i | r/i |     | Write A to mem[B]
-saveh    | r/i | r/i |     | Write A to mem[0xFFFF + B]
-load     | r/i | r   |     | Write mem[A] to register B
-loadh    | r/i | r   |     | Write mem[0xFFFF + A] to register B
-jgz      | r   | r/i |     | Jump to mem[B] if A is >0
-jlt      | r   | r/i |     | Jump to mem[B] if A is <0
-jez      | r   | r/i |     | Jump to mem[B] if A is 0
-int      |     |     |     | Interrupt
-brk      |     |     |     | Break
-
-## Binary instruction format
 `o` - opcode bit
-`t` - operand type bit, if set then operand is immediate, otherwise - register
-`x` - unused
 
-Instruction bits:
-First byte: `ooooottt`
-Operand values are packed depending on `ttt` bits:
-`000` - `xxaaabbb xxxxxccc`
-`001`, `010`, `100` - `xxaaabbb cccccccc cccccccc`
-`101`, `110`, `011` - `xxxxxaaa bbbbbbbb bbbbbbbb cccccccc cccccccc`
-`111` - `aaaaaaaa aaaaaaaa bbbbbbbb bbbbbbbb cccccccc cccccccc`
+`t` - operand type bit, if set then operand is immediate, otherwise - register or unused
 
-# Questions / TODO
-## Indirect adressing for registers
-```
-INSTR    ::= OPCODE SRC DST ARG
-OPCODE   ::= 0..255
-SRC      ::= REG
-DST      ::= REG
-REG      ::= MODE REGN
-MODE     ::= DIRECT | INDIRECT
-DIRECT   ::= 1
-INDIRECT ::= 0
-ARG      ::= REG | IMM
-IMM      ::= 0..65535
-REGN     ::= 0..7
-```
-Same 20 or 32 bits instruction length but can also have indirect adressing
+Operand values are packed in folowing bytes depending on `ttt` bits in first instruction byte:
 
-## Gamepad layout
-```
- ^    XYZ
-< > S ABC
- v
-```
-Keymap:
-XYZ - ASD
-ABC - ZXC
-S   - Enter
+`ttt` pattern       | following bytes
+------------------- | ---------------
+`000`               | `xxaaabbb xxxxxccc`
+`001`, `010`, `100` | `xxaaabbb cccccccc cccccccc`
+`101`, `110`, `011` | `xxxxxaaa bbbbbbbb bbbbbbbb cccccccc cccccccc`
+`111`               | `aaaaaaaa aaaaaaaa bbbbbbbb bbbbbbbb cccccccc cccccccc`
 
-## Word-addressable memory
-Instead of addressing bytes, address 16-bit words
-Pros: 128k addressable
-Cons: Bit-fiddling to get a byte, gotta rework all memmap, probably API too, all instructions become 2 words with lots of unused bits
+Where `x` - unused bit, `a`, `b`, `c` - instruction arguments
 
-## Memory mapped devices / Remove syscalls
-We actually don't have any system desu
-
-Questions:
-* Like interrupt type word + interrupt value word. How to mask them then?
-* ROM storage?
-* Halt instruction to stop execution until interrupt, noop if all interrupts masked
+## Memory map
 
 Addr range  | Size  | Device
 ----------- | ----- | --------------------
-00000-00006 | 6     | Interrupt controller
-00006-00014 | 8     | Cartridge controller
-00014-16455 | 16441 | GPU
-16455-16456 | 1     | Input controller
+00000-00006 | 6     | [Interrupt controller](#Interrupt-controller)
+00006-00014 | 8     | [Cartridge controller](#Cartridge-controller)
+00014-16455 | 16441 | [GPU](GPU)
+16455-16456 | 1     | [Input controller](#Input-controller)
 16456-17480 | 512   | ROM
 17480-23551 | 6071  | Unused
-23551-24575 | 1024  | Battery-backed RAM
-24575-65535 | 40960 | RAM
+23551-24575 | 1024  | [Battery-backed](#RAM)
+24575-65535 | 40960 | [RAM](#RAM)
 
-### Devices
+## Devices
 
-#### Interrupt controller
+### Interrupt controller
 
 Offset | Mode | Description
 ------ | ---- | ----------------------
@@ -334,7 +95,7 @@ Interrupt flags byte:
 Interrupt handler address word
 * Stores address to jmp to when interrupt is raised
 
-#### Cartridge controller
+### Cartridge controller
 
 Offset | Mode | Description
 ------ | ---- | -----------
@@ -363,7 +124,7 @@ DST word:
 LEN word:
 * Length of buffer to transfer
 
-#### GPU
+### GPU
 
 Offset | Mode | Description
 ------ | ---- | -----------
@@ -385,13 +146,13 @@ Sprites 16384 bytes:
 * Pixel is 4 bit index to pallete
 
 Control byte:
-* (IIII CCCC)
-* (B) Busy bit
+* `(IIII CCCC)`
+* `(B)` Busy bit
   * 1 when GPU command is being processed
   * 0 when GPU is ready for next command
   * Write 1 when 0 to start executing command
   * Resets to 0 when command execution finished
-* (C) Command 4 bit index
+* `(C)` Command 4 bit index
   * Index of GPU command to execute
   * 0x0: sprite
   * 0x1: line
@@ -400,10 +161,10 @@ Control byte:
   * 0x4: pixel
   * Write command index to start executing command
   * Resets to 0 when command execution finished
-* (I) Color 4 bits:
+* `(I)` Color 4 bits:
   * Index of color from palette to use when drawing
 
-##### GPU commands reference
+#### GPU commands reference
 
 Argument | Valid values
 ---------| ------------
@@ -421,18 +182,18 @@ Fill     | 2     | X1, Y1, X2, Y2 | Draw filled rectangle with current color wit
 Scroll   | 3     | N, M           | Scroll screen to horizontally by N and vertically by M pixels, filling new space with current color
 Pixel    | 4     | X, Y           | Draw a pixel at X,Y using current color
 
-#### Input
+### Input controller
 
 Offset | Mode | Description
 ------ | ---- | -----------
 00000  | RO   | Input state
 
 Input state byte:
-* (pccccccc)
-* (P) - button pressed state
-* (C) - character of pressed button
+* `(PCCCCCCC)`
+* `(P)` - button pressed state
+* `(C)` - character of pressed button
 
-#### RAM
+### RAM
 
 Offset | Mode | Description
 ------ | ---- | -----------
@@ -444,6 +205,80 @@ Battery-backed RAM, 1kb:
 
 Conventional RAM, 40960 bytes
 
+# Software
+
+## Assembly
+
+###  Syntax
+`<instruction>`
+`.<command>`
+
+Commands:
+  * label <label> - mark next instruction address as <label>
+  * export <label> - make <label> available to use in another files
+  * import <label> - use <label> address from another file
+  * const <name> <val> - define constant value of <val> named <name>
+  * <empty> - ignore everything until eol, used as comment
+
+### Instructions
+Mnemonic | A   | B   | C   | Note
+-------- | --- | --- | --- | ----
+add      | r/i | r/i | r   |
+sub      | r/i | r/i | r   |
+div      | r/i | r/i | r   |
+mul      | r/i | r/i | r   |
+xor      | r/i | r/i | r   |
+shf      | r/i | r/i | r   |
+and      | r/i | r/i | r   |
+or       | r/i | r/i | r   |
+save     | r/i | r/i |     | Write A to mem[B]
+saveh    | r/i | r/i |     | Write A to mem[0xFFFF + B]
+load     | r/i | r   |     | Write mem[A] to register B
+loadh    | r/i | r   |     | Write mem[0xFFFF + A] to register B
+jgz      | r   | r/i |     | Jump to mem[B] if A is >0
+jlt      | r   | r/i |     | Jump to mem[B] if A is <0
+jez      | r   | r/i |     | Jump to mem[B] if A is 0
+int      |     |     |     | Interrupt
+brk      |     |     |     | Break
+
+# Questions / TODO
+## Indirect adressing for registers
+```
+INSTR    ::= OPCODE SRC DST ARG
+OPCODE   ::= 0..255
+SRC      ::= REG
+DST      ::= REG
+REG      ::= MODE REGN
+MODE     ::= DIRECT | INDIRECT
+DIRECT   ::= 1
+INDIRECT ::= 0
+ARG      ::= REG | IMM
+IMM      ::= 0..65535
+REGN     ::= 0..7
+```
+Same 20 or 32 bits instruction length but can also have indirect adressing
+
+## Gamepad layout
+
+```
+ ^    XYZ
+< > S ABC
+ v
+```
+
+Keymap:
+XYZ - ASD
+ABC - ZXC
+S   - Enter
+
+## Word-addressable memory
+Instead of addressing bytes, address 16-bit words
+Pros: 128k addressable
+Cons: Bit-fiddling to get a byte, gotta rework all memmap, probably API too, all instructions become 2 words with lots of unused bits
+
+## Halt instruction
+Stops execution until interrupt, noop if all interrupts masked
+
 ## Add `data` and/or `var` commands to assembler
 `.var var-name var-size` - Reserve `var-size` somewhere in binary and then resolve `var-name` references with its address
 `.data data-name data-value` - Put `data-value` somewhere in binary and then resolve `data-name` references with its address
@@ -452,19 +287,44 @@ Conventional RAM, 40960 bytes
 Pros: less cases to handle in symtab code
 Cons: less flexible?
 
-## Remove interrupt calls
-Need a call/ret convention -> need stack convention
-Leave only status bits on devices and check them manually
-Pros: No need for call/ret conventions, can remove dedicated sp register
-Cons:
-  * More cumbersome code.
-  * What about timer? Can use timer device with tick-count and check manually
+## Developer Unit
+### Code editor
+bytes left count, follow jump, outline?, basic vim bindings
+### Sprite editor
+Copy TIC80, add font mode
+### Console
+Help command
+Code editor
+Sprite editor
+Cartridge API
 
-Or
-Interrupt controller mmap. Holds interrupt masks, stores PC on interupt and
-holds interupt handlers vector
+### Debug mode
+#### Projects
+Cartridge name + save bookmarks
+#### Code view
+Show opcodes, registers, stack memory, PC pointer
+#### Memory view
+* Bookmarks list
+  * Custom: addr + view mode
+  * VRAM
+  * RAM
+* Raw
+* Opcodes
+* Font
+* Sprite (size multiplyer)
 
-## Battery-backed RAM on cartridge
-Like Gameboy does. Use it for saves instead of storage device.
-Pros: game-level isolation
-Cons (?): modifying cartridge file
+## Cartridges
+
+Some template png
+Embed game cartridge binary into template
+```
+   /--------------\ <- sloped
+   |xx|xx|xx|xx|xx|
+   |xx|xx|xx|xx|xx| <- contact pads, embed code on them
+   |xx|xx|xx|xx|xx|
+   |              |
+   | __Game______ | <- sticker like area for text
+   | ___name_____ |
+   | ____v0.1____ |
+   +------------- +
+```
