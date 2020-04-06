@@ -282,40 +282,167 @@ Cons: Bit-fiddling to get a byte, gotta rework all memmap, probably API too, all
 
 ## Memory mapped devices / Remove syscalls
 We actually don't have any system desu
-Pros: more bare-metal
-Cons:
-  * Gotta do something with memory - can't address all those. 
-    Can be mitigated by DMA for storage/cartridge and replacing screenbuffer with paint pixel command for GPU
 
-Cartidge:
-  Present: bit
-  Mask interrupt: bit
-  Mem: 65535 bytes
+Questions:
+* Like interrupt type word + interrupt value word. How to mask them then?
+* ROM storage?
+* Halt instruction to stop execution until interrupt, noop if all interrupts masked
 
-Storage:
-  Busy: bit
-  Mask interrupt: bit
-  Src: word
-  Dst: word
-  Len: word
+Addr range  | Size  | Device
+----------- | ----- | --------------------
+00000-00006 | 6     | Interrupt controller
+00006-00014 | 8     | Cartridge controller
+00014-16455 | 16441 | GPU
+16455-16456 | 1     | Input controller
+16456-17480 | 512   | ROM
+17480-23551 | 6071  | Unused
+23551-24575 | 1024  | Battery-backed RAM
+24575-65535 | 40960 | RAM
 
-GPU:
-  Screen buffer: 320x240x4bits pixels = 38400 bytes
-  Palette: 16*3bytes = 48 bytes
-  Sprites: 512*8*8*4 = 16384 bytes
-  Busy: bit
-  Mask interrupt: bit
-  Command: 2 bit
-  Color: 4 bits
-  X1: word
-  Y1: word
-  X2: word
-  Y2: word
+### Devices
 
-Input:
-  Pressed: bit
-  Mask interrupt: bit
-  Char: 7 bit
+#### Interrupt controller
+
+Offset | Mode | Description
+------ | ---- | ----------------------
+00000  | RO   | Return address
+00002  | RW   | Interrupt mask
+00003  | RW   | Interrupt state
+00004  | RW   | Interrupt handler addr
+
+Return address word:
+* Stores PC when interrupt happened before jumping to handler
+
+Interrupt mask byte:
+* When bit is 1 - interrupt is masked
+* When interrupt masked handler won't be invoked when interrupt raised
+* All interrupts are masked before interrupt handler is invoked
+* 0 bit: Data transfer finished
+* 1 bit: Cart presence changed
+* 2 bit: GPU command finish
+* 3 bit: GPU invalid command
+* 4 bit: Input state change
+* 5 bit: Clock
+* 6 bit: Reserved
+* 7 bit: Reserved
+
+Interrupt flags byte:
+* Indexes are same as in mask byte
+* Bit set to 1 when interrupt is active
+* Set corresponding bit to 0 to mark interrupt as handled
+
+Interrupt handler address word
+* Stores address to jmp to when interrupt is raised
+
+#### Cartridge controller
+
+Offset | Mode | Description
+------ | ---- | -----------
+00000  | RO   | State bit
+00001  | RW   | Busy bit
+00002  | RW   | SRC word
+00004  | RW   | DST word
+00006  | RW   | LEN word
+
+Present byte:
+* 1 when cartridge present
+* 0 otherwise
+
+Busy byte:
+* 1 when data transfer in progress
+* 0 when no data transfer in progress
+* Write 1 when 0 to start data transfer
+* Resets to 0 when data transfer completed
+
+SRC word:
+* Starting address in cartridge mem to read from during data transfer
+
+DST word:
+* Starting address in main memory to write to during data transfer
+
+LEN word:
+* Length of buffer to transfer
+
+#### GPU
+
+Offset | Mode | Description
+------ | ---- | -----------
+00000  | RW   | Palette
+00048  | RW   | Sprite map
+16432  | RW   | Control
+16433  | RW   | Command argument register 1
+16435  | RW   | Command argument register 2
+16437  | RW   | Command argument register 3
+16439  | RW   | Command argument register 4
+
+Palette 48 bytes:
+* Array of 16 colors
+* Each color is 3 RGB bytes
+
+Sprites 16384 bytes:
+* Array of 512 sprites
+* Sprite is 8x8 pixel grid
+* Pixel is 4 bit index to pallete
+
+Control byte:
+* (IIII CCCC)
+* (B) Busy bit
+  * 1 when GPU command is being processed
+  * 0 when GPU is ready for next command
+  * Write 1 when 0 to start executing command
+  * Resets to 0 when command execution finished
+* (C) Command 4 bit index
+  * Index of GPU command to execute
+  * 0x0: sprite
+  * 0x1: line
+  * 0x2: fill
+  * 0x3: scroll
+  * 0x4: pixel
+  * Write command index to start executing command
+  * Resets to 0 when command execution finished
+* (I) Color 4 bits:
+  * Index of color from palette to use when drawing
+
+##### GPU commands reference
+
+Argument | Valid values
+---------| ------------
+SprIx    | 0..511
+X        | 0..319
+Y        | 0..239
+N, M     | 0..65535
+Color    | 0..15
+
+Mnemonic | Index | Arguments      | Description
+-------- | ----- | -------------- | -----------
+Sprite   | 0     | SprIx, X, Y    | Blit sprite with SprIx to X,Y position, where X,Y is top-left corner
+Line     | 1     | X1, Y1, X2, Y2 | Draw a line from X1,Y1 to X2,Y2 using current color
+Fill     | 2     | X1, Y1, X2, Y2 | Draw filled rectangle with current color with top level corner X1,Y1 and right bottom corner at X2,Y2
+Scroll   | 3     | N, M           | Scroll screen to horizontally by N and vertically by M pixels, filling new space with current color
+Pixel    | 4     | X, Y           | Draw a pixel at X,Y using current color
+
+#### Input
+
+Offset | Mode | Description
+------ | ---- | -----------
+00000  | RO   | Input state
+
+Input state byte:
+* (pccccccc)
+* (P) - button pressed state
+* (C) - character of pressed button
+
+#### RAM
+
+Offset | Mode | Description
+------ | ---- | -----------
+00000  | RW   | Battery-backed RAM
+01024  | RW   | Conventional RAM
+
+Battery-backed RAM, 1kb:
+* Acts as conventional RAM but persists its data
+
+Conventional RAM, 40960 bytes
 
 ## Add `data` and/or `var` commands to assembler
 `.var var-name var-size` - Reserve `var-size` somewhere in binary and then resolve `var-name` references with its address
