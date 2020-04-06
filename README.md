@@ -17,49 +17,32 @@
 * [Questions](#Questions)
 
 # Memory map
-```
-+-------------------------------------+--------------+-----+
-| Description                         | Size / Bits  | Mod |
-+-------------------------------------+--------------+-----+
-= HARDWARE STATE ===========================================
-| Display, Input, Cartridge           | xxxx xDIC    | r-- |
-= INPUT ====================================================
-| Pressed, Char                       | P CCCCCCC    | r-- |
-= INTERRUPT ================================================
-| Breakpoint, Cartridge, Input, Timer | BCIT bcit    | rw- |
-| Handler addr                        | 1            | -w- |
-= RAM ======================================================
-| VRAM map                            | 16432 / 8944 |     |
-+-------------------------------------+--------------+-----+
+Description                         | Size / Bits  | Mod
+----------------------------------- | ------------ | ---
+Display, Input, Cartridge           | xxxx xDIC    | r--
+Pressed, Char                       | P CCCCCCC    | r--
+Breakpoint, Cartridge, Input, Timer | BCIT bcit    | rw-
+Handler addr                        | 1            | -w-
+VRAM map                            | 16432 / 8944 | rw-
 
-+-------------------+-------+-----+
-| Graphic mode VRAM | Size  | Mod |
-+-------------------+-------+-----+
-| Pallete           | 48    | rw- | 16 RGB colors
-| Sprite map        | 8192  | rw- | 256 8x8 sprites, each pixel is color index
-| Sprite map        | 8192  | rw- | 256 8x8 sprites, each pixel is color index
-+-------------------+-------+-----+
-| Total             | 16432       |
-+-------------------+-------+-----+
 
-+----------------+------+-----+
-| Text mode VRAM | Size | Mod |
-+----------------+------+-----+
-| Palette        | 48   | rw- | 16 RGB colors
-| Font map       | 4096 | rw- | 256 symbols * 8*16 dots
-| Text buffer    | 4800 | rw- | char byte + fg color + bg color
-+----------------+------+-----+
-| Total          | 8944       |
-+----------------+------+-----+
+Graphic mode VRAM | Size  | Mod | Note
+----------------- | ----- | --- | ----
+Pallete           | 48    | rw- | 16 RGB colors
+Sprite map        | 8192  | rw- | 256 8x8 sprites, each pixel is color index
+Sprite map        | 8192  | rw- | 256 8x8 sprites, each pixel is color index
 
-+---------------+------+-----+
-| Cartridge     | Size | Mod |
-+---------------+------+-----+
-| Palette       | 48   | rw- | Mapped to VRAM palette
-| Graphics data |      | rw- |
-| code          |      | r-x | Mapped to RAM
-+---------------+------+-----+
-```
+Text mode VRAM | Size | Mod | Note
+-------------- | ---- | --- | ----
+Palette        | 48   | rw- | 16 RGB colors
+Font map       | 4096 | rw- | 256 symbols * 8*16 dots
+Text buffer    | 4800 | rw- | char byte + fg color + bg color
+
+Cartridge     | Size | Mod | Note
+------------- | ---- | --- | ----
+Palette       | 48   | rw- | Mapped to VRAM palette
+Graphics data |      | rw- |
+code          |      | r-x | Mapped to RAM
 
 # Registers
 r0..r7, flags, pc, sp
@@ -92,28 +75,20 @@ To make a sys call
 3. Execute int opcode
 4. Read result from `r1`
 
-```
-+----------+----+-----+-----+-----+----+----+-----+
-| mnemonic | r1 | r2  | r3  | r4  | r5 | r6 | r7  |
-+----------+----+-----+-----+-----+----+----+-----+
-= Cartridge =======================================
-| cart     | 0  |     |     |     |    |    |     |
-| burn     | 1  | src | dst | len |    |    |     |
-= Graphics ========================================
-| sprite   | 2  | idx | x   | y   |    |    |     |
-| line     | 3  | idx | x1  | y1  | x2 | y2 |     |
-| fill     | 4  | idx | x1  | y1  | x2 | y2 |     |
-| scroll   | 5  | idx | x   | y   |    |    |     |
-| mode     | 6  |     |     |     |    |    |     |
-= Storage =========================================
-| save     | 7  | len | src | dst |    |    |     |
-| load     | 8  | len | src | dst |    |    |     |
-| peek     | 9  | src |     |     |    |    |     |
-| bank     | 10 | idx |     |     |    |    |     |
-= Debug ===========================================
-| out      | 11 | len | src |     |    |    |     |
-+----------+----+-----+-----+-----+----+----+-----+
-```
+mnemonic | r1 | r2  | r3  | r4  | r5 | r6
+-------- | -- | --- | --- | --- | -- | --
+cart     | 0  |     |     |     |    |
+burn     | 1  | src | dst | len |    |
+sprite   | 2  | idx | x   | y   |    |
+line     | 3  | idx | x1  | y1  | x2 | y2
+fill     | 4  | idx | x1  | y1  | x2 | y2
+scroll   | 5  | idx | x   | y   |    |
+mode     | 6  |     |     |     |    |
+save     | 7  | len | src | dst |    |
+load     | 8  | len | src | dst |    |
+peek     | 9  | src |     |     |    |
+bank     | 10 | idx |     |     |    |
+out      | 11 | len | src |     |    |
 
 ### Cartridge
 **cart**
@@ -239,28 +214,25 @@ Commands:
   * <empty> - ignore everything until eol, used as comment
 
 ## Instructions
-```
-+----------+-----+-----+-----+
-| Mnemonic | A   | B   | C   |
-+----------+-----+-----+-----+
-| add      | r/i | r/i | r   |
-| sub      | r/i | r/i | r   |
-| div      | r/i | r/i | r   |
-| mul      | r/i | r/i | r   |
-| xor      | r/i | r/i | r   |
-| shf      | r/i | r/i | r   |
-| and      | r/i | r/i | r   |
-| or       | r/i | r/i | r   |
-| save     | r/i | r/i |     | Write A to mem[B]
-| saveh    | r/i | r/i |     | Write A to mem[0xFFFF + B]
-| load     | r/i | r   |     | Write mem[A] to register B
-| loadh    | r/i | r   |     | Write mem[0xFFFF + A] to register B
-| jgz      | r   | r/i |     | Jump to mem[B] if A is >0
-| jlt      | r   | r/i |     | Jump to mem[B] if A is <0
-| jez      | r   | r/i |     | Jump to mem[B] if A is 0
-| int      |     |     |     | Interrupt
-| brk      |     |     |     | Break
-```
+Mnemonic | A   | B   | C   | Note
+-------- | --- | --- | --- | ----
+add      | r/i | r/i | r   |
+sub      | r/i | r/i | r   |
+div      | r/i | r/i | r   |
+mul      | r/i | r/i | r   |
+xor      | r/i | r/i | r   |
+shf      | r/i | r/i | r   |
+and      | r/i | r/i | r   |
+or       | r/i | r/i | r   |
+save     | r/i | r/i |     | Write A to mem[B]
+saveh    | r/i | r/i |     | Write A to mem[0xFFFF + B]
+load     | r/i | r   |     | Write mem[A] to register B
+loadh    | r/i | r   |     | Write mem[0xFFFF + A] to register B
+jgz      | r   | r/i |     | Jump to mem[B] if A is >0
+jlt      | r   | r/i |     | Jump to mem[B] if A is <0
+jez      | r   | r/i |     | Jump to mem[B] if A is 0
+int      |     |     |     | Interrupt
+brk      |     |     |     | Break
 
 ## Binary instruction format
 `o` - opcode bit
