@@ -231,10 +231,14 @@ xor      | r/i | r/i | r   |
 shf      | r/i | r/i | r   |
 and      | r/i | r/i | r   |
 or       | r/i | r/i | r   |
-save     | r/i | r/i |     | Write A to mem[B]
-saveh    | r/i | r/i |     | Write A to mem[0xFFFF + B]
-load     | r/i | r   |     | Write mem[A] to register B
-loadh    | r/i | r   |     | Write mem[0xFFFF + A] to register B
+save     | r/i | r/i |     | Write lower byte of A to mem[B]
+savew    | r/i | r/i |     | Write A to mem[B]
+saveh    | r/i | r/i |     | Write lower byte of A to mem[0xFFFF + B]
+savehw   | r/i | r/i |     | Write A to mem[0xFFFF + B]
+load     | r/i | r   |     | Write mem[A] to lower byte of register B
+loadw    | r/i | r   |     | Write word at mem[A] to register B
+loadh    | r/i | r   |     | Write mem[0xFFFF + A] to lower byte of to register B
+loadhw   | r/i | r   |     | Write word at mem[0xFFFF + A] to register B
 jgz      | r   | r/i |     | Jump to mem[B] if A is >0
 jlt      | r   | r/i |     | Jump to mem[B] if A is <0
 jez      | r   | r/i |     | Jump to mem[B] if A is 0

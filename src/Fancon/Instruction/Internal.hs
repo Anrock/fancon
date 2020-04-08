@@ -17,9 +17,13 @@ data Opcode = Add
             | And
             | Or
             | Saveh
+            | Savehw
             | Save
+            | Savew
             | Loadh
+            | Loadhw
             | Load
+            | Loadw
             | Jgz
             | Jlt
             | Jez
