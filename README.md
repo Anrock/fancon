@@ -15,7 +15,6 @@
     * [RAM](#RAM)
 * [Software](#Software)
   * [Assembly](#Assembly)
-* [Questions](#Questions--TODO)
 
 # Hardware
 
@@ -244,80 +243,3 @@ jlt      | r   | r/i |     | Jump to mem[B] if A is <0
 jez      | r   | r/i |     | Jump to mem[B] if A is 0
 int      |     |     |     | Interrupt
 brk      |     |     |     | Break
-
-# Questions / TODO
-
-## Gamepad layout
-
-```
- ^    XYZ
-< > S ABC
- v
-```
-
-Keymap:
-XYZ - ASD
-ABC - ZXC
-S   - Enter
-
-## Word-addressable memory
-Instead of addressing bytes, address 16-bit words
-Pros: 128k addressable
-Cons: Bit-fiddling to get a byte, gotta rework all memmap, probably API too, all instructions become 2 words with lots of unused bits
-
-## Halt instruction
-Stops execution until interrupt, noop if all interrupts masked
-
-## Add `data` and/or `var` commands to assembler
-`.var var-name var-size` - Reserve `var-size` somewhere in binary and then resolve `var-name` references with its address
-`.data data-name data-value` - Put `data-value` somewhere in binary and then resolve `data-name` references with its address
-
-## Replace `import`/`export` commands with single `global`?
-Pros: less cases to handle in symtab code
-Cons: less flexible?
-
-## Developer Unit
-### Code editor
-bytes left count, follow jump, outline?, basic vim bindings
-### Sprite editor
-Copy TIC80, add font mode
-### Console
-Help command
-Code editor
-Sprite editor
-Cartridge API
-
-### Debug mode
-#### Projects
-Cartridge name + save bookmarks
-#### Code view
-Show opcodes, registers, stack memory, PC pointer
-#### Memory view
-* Bookmarks list
-  * Custom: addr + view mode
-  * VRAM
-  * RAM
-* Raw
-* Opcodes
-* Font
-* Sprite (size multiplyer)
-
-## Cartridges
-
-Some template png
-Embed game cartridge binary into template
-```
-   /--------------\ <- sloped
-   |xx|xx|xx|xx|xx|
-   |xx|xx|xx|xx|xx| <- contact pads, embed code on them
-   |xx|xx|xx|xx|xx|
-   |              |
-   | __Game______ | <- sticker like area for text
-   | ___name_____ |
-   | ____v0.1____ |
-   +------------- +
-```
-
-## 16 registers
-2 bits in instruction byte for register indexes are unused.
-Make indexes 4 bit and allow to address 16 registers
