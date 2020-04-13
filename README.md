@@ -220,6 +220,7 @@ Commands:
   * <empty> - ignore everything until eol, used as comment
 
 ### Instructions
+
 Mnemonic | A   | B   | C   | Note
 -------- | --- | --- | --- | ----
 add      | r/i | r/i | r   |
