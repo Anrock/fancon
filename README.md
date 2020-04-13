@@ -37,14 +37,18 @@ First instruction byte: `ooooottt`
 
 Operand values are packed in folowing bytes depending on `ttt` bits in first instruction byte:
 
-`ttt` pattern       | following bytes
-------------------- | ---------------
-`000`               | `xxaaabbb xxxxxccc`
-`001`, `010`, `100` | `xxaaabbb cccccccc cccccccc`
-`101`, `110`, `011` | `xxxxxaaa bbbbbbbb bbbbbbbb cccccccc cccccccc`
-`111`               | `aaaaaaaa aaaaaaaa bbbbbbbb bbbbbbbb cccccccc cccccccc`
+`ttt` pattern | following bytes
+------------- | ---------------
+`000`         | `xxaaabbb xxxxxccc`
+`001`         | `xxaaabbb cccccccc cccccccc`
+`010`         | `xxaaaccc bbbbbbbb bbbbbbbb`
+`100`         | `xxbbbccc aaaaaaaa aaaaaaaa`
+`101`         | `xxxxxbbb aaaaaaaa aaaaaaaa cccccccc cccccccc`
+`110`         | `xxxxxccc aaaaaaaa aaaaaaaa bbbbbbbb bbbbbbbb`
+`011`         | `xxxxxaaa bbbbbbbb bbbbbbbb cccccccc cccccccc`
+`111`         | `aaaaaaaa aaaaaaaa bbbbbbbb bbbbbbbb cccccccc cccccccc`
 
-Where `x` - unused bit, `a`, `b`, `c` - instruction arguments
+Where `x` - unused bit, `a`, `b`, `c` - instruction operand values
 
 ## Memory map
 
