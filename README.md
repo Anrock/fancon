@@ -55,13 +55,13 @@ Where `x` - unused bit, `a`, `b`, `c` - instruction operand values
 Addr range  | Size  | Device
 ----------- | ----- | --------------------
 00000-00006 | 6     | [Interrupt controller](#Interrupt-controller)
-00006-00014 | 8     | [Cartridge controller](#Cartridge-controller)
-00014-16455 | 16441 | [GPU](GPU)
-16455-16456 | 1     | [Input controller](#Input-controller)
-16456-17480 | 512   | ROM
-17480-23551 | 6071  | Unused
-23551-24575 | 1024  | [Battery-backed](#RAM)
-24575-65535 | 40960 | [RAM](#RAM)
+00006-00013 | 7     | [Cartridge controller](#Cartridge-controller)
+00013-16454 | 16441 | [GPU](GPU)
+16454-16455 | 1     | [Input controller](#Input-controller)
+16455-17479 | 512   | ROM
+17479-23550 | 6071  | Unused
+23550-24574 | 1024  | [Battery-backed](#RAM)
+24574-65534 | 40960 | [RAM](#RAM)
 
 ## Devices
 
@@ -103,20 +103,13 @@ Interrupt handler address word
 Offset | Mode | Description
 ------ | ---- | -----------
 00000  | RO   | State bit
-00001  | RW   | Busy bit
-00002  | RW   | SRC word
-00004  | RW   | DST word
-00006  | RW   | LEN word
+00001  | RW   | SRC word
+00003  | RW   | DST word
+00005  | RW   | LEN word
 
 Present byte:
 * 1 when cartridge present
 * 0 otherwise
-
-Busy byte:
-* 1 when data transfer in progress
-* 0 when no data transfer in progress
-* Write 1 when 0 to start data transfer
-* Resets to 0 when data transfer completed
 
 SRC word:
 * Starting address in cartridge mem to read from during data transfer
@@ -126,6 +119,9 @@ DST word:
 
 LEN word:
 * Length of buffer to transfer
+* Non-zero when data transfer in progress
+* Write non-zero value to start data transfer
+* Resets to 0 when data transfer completed
 
 ### GPU
 
@@ -150,11 +146,6 @@ Sprites 16384 bytes:
 
 Control byte:
 * `(IIII CCCC)`
-* `(B)` Busy bit
-  * 1 when GPU command is being processed
-  * 0 when GPU is ready for next command
-  * Write 1 when 0 to start executing command
-  * Resets to 0 when command execution finished
 * `(C)` Command 4 bit index
   * Index of GPU command to execute
   * 0x0: sprite
