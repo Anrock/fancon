@@ -1,37 +1,27 @@
+cabal-version:      2.2
 name:               fancon
 version:            0.0.0.1
 homepage:           https://github.com/Anrock/fancon#readme
 build-type:         Simple
-cabal-version:      >=1.10
 extra-source-files: README.md
 
-executable fancon
-  hs-source-dirs:     src
-  main-is:            Main.hs
-  default-language:   Haskell2010
-  other-modules:        Fancon.Memory
-                      , Fancon.Instruction
-                      , Fancon.Instruction.Internal
-                      , Fancon.Instruction.Validate
-                      , Fancon.Emit
-                      , Fancon.Parse
-                      , Fancon.Assemble
-                      , Fancon.Symboltable
-                      , Fancon.Link
-  ghc-options:        -O2 -flate-specialise -fspecialise-aggressively
-                      -fplugin=Polysemy.Plugin
-                      -threaded
-                      -Weverything
-                      -Wno-missing-exported-signatures
-                      -Wmissing-signatures
-                      -Wno-implicit-prelude
-                      -Wno-missing-import-lists
-                      -Wno-missed-specialisations
-                      -Wno-all-missed-specialisations
-                      -Wno-unsafe
-                      -Wno-safe
-                      -Wno-missing-local-signatures
-                      -Wno-monomorphism-restriction
+common warnings
+  ghc-options: -Weverything
+               -Wno-missing-exported-signatures
+               -Wmissing-signatures
+               -Wno-implicit-prelude
+               -Wno-missing-import-lists
+               -Wno-missed-specialisations
+               -Wno-all-missed-specialisations
+               -Wno-unsafe
+               -Wno-safe
+               -Wno-missing-local-signatures
+               -Wno-monomorphism-restriction
+
+common ghc-options
+  ghc-options: -O2 -flate-specialise -fspecialise-aggressively -fplugin=Polysemy.Plugin
+
+common lang-extensions
   default-extensions:   QuasiQuotes
                       , OverloadedStrings
                       , OverloadedLists
@@ -54,13 +44,40 @@ executable fancon
                       , NumericUnderscores
                       , BlockArguments
                       , RecordWildCards
-  build-depends:        base >= 4.7 && < 5
-                      , array
-                      , containers
-                      , megaparsec
-                      , polysemy
-                      , polysemy-plugin
-                      , bytestring
-                      , yaml
-                      , text
-                      , interpolate
+
+common deps
+  build-depends:   base >= 4.7 && < 5
+                 , array
+                 , containers
+                 , megaparsec
+                 , polysemy
+                 , polysemy-plugin
+                 , bytestring
+                 , yaml
+                 , text
+                 , interpolate
+
+
+
+library
+  import: warnings, ghc-options, lang-extensions, deps
+  hs-source-dirs:   lib
+  default-language: Haskell2010
+  exposed-modules:  Fancon
+  other-modules:    Fancon.Memory
+                  , Fancon.Instruction
+                  , Fancon.Instruction.Internal
+                  , Fancon.Instruction.Validate
+                  , Fancon.Emit
+                  , Fancon.Parse
+                  , Fancon.Assemble
+                  , Fancon.Symboltable
+                  , Fancon.Link
+
+executable fancon
+  import: ghc-options, warnings, lang-extensions, deps
+  hs-source-dirs:   src
+  default-language: Haskell2010
+  main-is:          Main.hs
+  ghc-options:      -threaded
+  build-depends:    fancon

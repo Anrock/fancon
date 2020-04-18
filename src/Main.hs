@@ -9,12 +9,7 @@ import Data.Array
 import Data.Maybe
 import qualified Data.ByteString.Lazy as BS
 
-import Fancon.Instruction
-import Fancon.Parse
-import Fancon.Assemble
-import Fancon.Symboltable
-import Fancon.Link
-import Fancon.Emit
+import Fancon
 
 main :: IO ()
 main = getArgs >>= \case
