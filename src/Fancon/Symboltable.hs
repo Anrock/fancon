@@ -11,6 +11,7 @@ module Fancon.Symboltable
   , imports
   , local
   , references
+  , referencesToLocals
 
   , emptySymbolTable
 
@@ -27,6 +28,14 @@ module Fancon.Symboltable
   , undefinedLocals
   , unusedImports
   , unusedLocals
+
+  , offsetSymbolTable
+  , offsetSymbol
+  , offsetReference
+
+  , resolveImportsFrom
+
+  , printSymbolTable
   ) where
 
 import qualified Data.Map as M
@@ -34,6 +43,8 @@ import qualified Data.Set as S
 import Data.Set ((\\))
 import Data.Text (Text)
 import Data.List.NonEmpty
+import qualified Data.List.NonEmpty as NE
+import Data.String.Interpolate
 
 type SymbolName = Text
 data Symbol = Location { value :: Int }
@@ -100,3 +111,32 @@ undefinedExports s@SymbolTable { exports } = exports \\ localNameSet s
 
 importNameCollisions :: SymbolTable -> S.Set SymbolName
 importNameCollisions s@SymbolTable { imports } = S.intersection (localNameSet s) imports
+
+offsetSymbolTable :: Int -> SymbolTable -> SymbolTable
+offsetSymbolTable ofs s = s{local = local', references = references'}
+  where local' = M.map (offsetSymbol ofs) (local s)
+        references' = M.map (offsetReference ofs) (references s)
+
+offsetSymbol :: Int -> Symbol -> Symbol
+offsetSymbol ofs l@Location{value} = l{value = value + ofs}
+offsetSymbol _ c = c
+
+offsetReference :: Int -> NonEmpty SymbolReference -> NonEmpty SymbolReference
+offsetReference ofs = NE.map (\(l, o) -> (l + ofs, o))
+
+resolveImportsFrom :: SymbolTable -> SymbolTable -> SymbolTable
+a `resolveImportsFrom` b = a{imports = imports a \\ namesToResolve, local = M.union (local a) symbolsToResolve}
+  where namesToResolve = S.intersection (imports a) (exports b)
+        symbolsToResolve = M.restrictKeys (local b) namesToResolve
+
+referencesToLocals :: SymbolTable -> M.Map SymbolName (NonEmpty SymbolReference)
+referencesToLocals SymbolTable{local, references} = M.intersection references local
+
+printSymbolTable :: SymbolTable -> String
+printSymbolTable symtab =
+  [i|Symbol table
+     Exports: #{S.toList (exports symtab)}
+     Imports: #{S.toList (imports symtab)}
+     Locals: #{M.toList (local symtab)}
+     References: #{M.toList (references symtab)}|]
+
