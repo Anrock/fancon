@@ -2,29 +2,46 @@ module Main (main) where
 
 import System.Environment (getArgs)
 import qualified Data.Text.IO as T
+import Data.Text (Text)
 import Text.Megaparsec (errorBundlePretty)
-import qualified Data.Map as M
-import qualified Data.Set as S
 import Control.Monad
 import Data.Array
+import Data.Maybe
 
+import Fancon.Instruction
 import Fancon.Parse
 import Fancon.Assemble
 import Fancon.Symboltable
+import Fancon.Link
 
 main :: IO ()
 main = getArgs >>= \case
   "compile":fileNames -> compile fileNames
   _                   -> putStrLn "Unknown command"
 
+printHeader :: String -> IO ()
+printHeader fileName = do putStrLn fileName
+                          putStrLn (replicate (length fileName) '=')
+
 compile :: [FilePath] -> IO ()
-compile fileNames =
-  forM_ fileNames $ \fileName -> do
-    putStrLn fileName
-    putStrLn (replicate (length fileName) '=')
+compile fileNames = do
+  compiledFiles <- forM fileNames $ \fileName -> do
+    printHeader fileName
     fileContents <- T.readFile fileName
+    compileFile fileContents
+
+  unless (any isNothing compiledFiles) $ do
+    let compiledFiles' = fromJust <$> compiledFiles
+    printHeader "Linked"
+    let (symtab, ins) = link compiledFiles'
+    putStrLn $ printSymbolTable symtab
+    putStrLn $ printInstructions ins
+
+compileFile :: Text -> IO (Maybe Module)
+compileFile fileContents =
     case parse fileContents of
-      Left e -> putStrLn . errorBundlePretty $ e
+      Left e -> do putStrLn . errorBundlePretty $ e
+                   pure Nothing
       Right ast -> do sequence_ $ print <$> assocs ast
                       putStrLn ""
 
@@ -35,22 +52,10 @@ compile fileNames =
                         putStrLn ""
 
                       case assembleResult of
-                        Left errors -> putStrLn "Errors: " >> sequence_ (print <$> errors)
-                        Right (symtab, instructions) -> do
-                          printSymbolTable symtab
-
-                          unless (null instructions) $ do
-                            putStrLn "Instructions: "
-                            sequence_ (print <$> assocs instructions)
-                            putStrLn ""
-
-printSymbolTable :: SymbolTable -> IO ()
-printSymbolTable symtab =
-  do putStr "Symbol table"
-     putStrLn "Exports:"
-     sequence_ $ print <$> S.toList (exports symtab)
-     putStrLn "Imports:"
-     sequence_ $ print <$> S.toList (imports symtab)
-     putStrLn "Locals:"
-     sequence_ $ print <$> M.toList (local symtab)
-
+                        Left errors -> do putStrLn "Errors: "
+                                          sequence_ (print <$> errors)
+                                          pure Nothing
+                        Right m@(symtab, instructions) -> do
+                          putStrLn $ printSymbolTable symtab
+                          unless (null instructions) $ putStrLn $ printInstructions instructions
+                          pure . Just $ m
