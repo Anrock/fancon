@@ -4,14 +4,14 @@ import Prelude hiding (Word)
 import qualified Data.ByteString.Lazy as B
 import qualified Data.ByteString.Builder as B
 import Data.List (sortBy)
-
 import Data.Bits (shiftL, (.|.), zeroBits)
+import Data.Array
 
 import Fancon.Instruction.Internal
 import Fancon.Memory
 
-emit :: [Instruction] -> B.ByteString
-emit = B.toLazyByteString . mconcat . fmap emitInstruction
+emit :: Array Int Instruction -> B.ByteString
+emit = B.toLazyByteString . mconcat . fmap emitInstruction . elems
 
 emitInstruction :: Instruction -> B.Builder
 emitInstruction ins@Instruction{operands} =
