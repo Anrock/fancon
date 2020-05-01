@@ -55,13 +55,13 @@ Where `x` - unused bit, `a`, `b`, `c` - instruction operand values
 Addr range  | Size  | Device
 ----------- | ----- | --------------------
 00000-00006 | 6     | [Interrupt controller](#Interrupt-controller)
-00006-00013 | 7     | [Cartridge controller](#Cartridge-controller)
-00013-16454 | 16441 | [GPU](GPU)
-16454-16455 | 1     | [Input controller](#Input-controller)
-16455-17479 | 512   | ROM
-17479-23550 | 6071  | Unused
-23550-24574 | 1024  | [Battery-backed](#RAM)
-24574-65534 | 40960 | [RAM](#RAM)
+00006-00007 | 1     | [Input controller](#Input-controller)
+00007-00014 | 7     | [Cartridge controller](#Cartridge-controller)
+00014-16456 | 16441 | [GPU](GPU)
+16456-16968 | 512   | ROM
+16968-17406 | 438   | Reserved
+17406-18430 | 1024  | [Battery-backed](#RAM)
+18430-65535 | 47105 | [RAM](#RAM)
 
 ## Devices
 
@@ -127,13 +127,14 @@ LEN word:
 
 Offset | Mode | Description
 ------ | ---- | -----------
-00000  | RW   | Palette
-00048  | RW   | Sprite map
-16432  | RW   | Control
-16433  | RW   | Command argument register 1
-16435  | RW   | Command argument register 2
-16437  | RW   | Command argument register 3
-16439  | RW   | Command argument register 4
+00000  | RW   | Command argument register 1
+00002  | RW   | Command argument register 2
+00004  | RW   | Command argument register 3
+00006  | RW   | Command argument register 4
+00008  | RW   | Control
+00009  | RW   | Transparency mask
+00010  | RW   | Palette
+00058  | RW   | Sprite map
 
 Palette 48 bytes:
 * Array of 16 colors
@@ -189,15 +190,8 @@ Input state byte:
 
 ### RAM
 
-Offset | Mode | Description
------- | ---- | -----------
-00000  | RW   | Battery-backed RAM
-01024  | RW   | Conventional RAM
-
-Battery-backed RAM, 1kb:
-* Acts as conventional RAM but persists its data
-
-Conventional RAM, 40960 bytes
+Battery-backed: persists its contents without power
+RAM: conventional RAM, 16bits width, byte-addressable
 
 # Software
 
