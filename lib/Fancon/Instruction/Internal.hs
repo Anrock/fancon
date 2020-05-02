@@ -2,6 +2,8 @@ module Fancon.Instruction.Internal
   ( Opcode(..)
   , Instruction(..)
   , Operand(..)
+  , arity
+  , maxArity
   ) where
 
 import Prelude hiding (div, and, or, Word)
@@ -36,3 +38,29 @@ data Operand = Register Byte | Immediate Word deriving (Eq, Show)
 data Instruction = Instruction { opcode :: Opcode
                                , operands :: [Operand]
                                } deriving (Eq, Show)
+
+arity :: Opcode -> Int
+arity Add    = 3
+arity Sub    = 3
+arity Div    = 3
+arity Mul    = 3
+arity Xor    = 3
+arity Shf    = 3
+arity And    = 3
+arity Or     = 3
+arity Saveh  = 2
+arity Savehw = 2
+arity Save   = 2
+arity Savew  = 2
+arity Loadh  = 2
+arity Loadhw = 2
+arity Load   = 2
+arity Loadw  = 2
+arity Jgz    = 2
+arity Jlt    = 2
+arity Jez    = 2
+arity Int    = 0
+arity Brk    = 0
+
+maxArity :: Int
+maxArity = 3

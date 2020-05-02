@@ -5,6 +5,8 @@ module Fancon.Instruction
   , opcode
   , operands
   , printInstructions
+  , arity
+  , maxArity
   , module Fancon.Instruction.Validate
   ) where
 
@@ -16,4 +18,3 @@ import Data.List (intercalate)
 
 printInstructions :: Array Int Instruction -> String
 printInstructions instructions = [i|#{length instructions} instructions:\n#{intercalate "\n" $ show <$> assocs instructions}|]
-
