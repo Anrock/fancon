@@ -4,7 +4,7 @@ import Prelude hiding (Word)
 import qualified Data.ByteString.Lazy as B
 import qualified Data.ByteString.Builder as B
 import Data.List (sortBy)
-import Data.Bits (shiftL, (.|.), zeroBits)
+import Data.Bits (shiftL, (.|.), zeroBits, setBit, clearBit)
 import Data.Array
 
 import Fancon.Instruction.Internal
@@ -18,12 +18,14 @@ emitInstruction ins@Instruction{operands} =
   emitFirstByte ins <> emitOperands (sortBy packingOrder operands)
 
 emitFirstByte :: Instruction -> B.Builder
-emitFirstByte (Instruction opcode operands) = pack opcodeByte layoutByte
+emitFirstByte (Instruction opcode operands) = pack opcodeByte (layoutByte operands)
   where opcodeByte = fromIntegral . fromEnum $ opcode
-        layoutByte :: Byte
-        layoutByte = foldr (.|.) zeroBits (layoutBit <$> operands)
-        layoutBit (Register _) = 0b0
-        layoutBit (Immediate _) = 0b1
+
+layoutByte :: [Operand] -> Byte
+layoutByte operands = fst $ foldr f (zeroBits, length operands) operands
+  where f :: Operand -> (Byte, Int) -> (Byte, Int)
+        f (Register _) (b, ix) = (clearBit b ix, pred ix)
+        f (Immediate _) (b, ix) = (setBit b ix, pred ix)
 
 packingOrder :: Operand -> Operand -> Ordering
 packingOrder (Register _) _ = LT
