@@ -210,14 +210,14 @@ Commands:
 
 Mnemonic | A   | B   | C   | Note
 -------- | --- | --- | --- | ----
-add      | r/i | r/i | r   |
-sub      | r/i | r/i | r   |
-div      | r/i | r/i | r   |
-mul      | r/i | r/i | r   |
-xor      | r/i | r/i | r   |
-shf      | r/i | r/i | r   |
-and      | r/i | r/i | r   |
-or       | r/i | r/i | r   |
+add      | r   | r/i | r   |
+sub      | r   | r/i | r   |
+div      | r   | r/i | r   |
+mul      | r   | r/i | r   |
+xor      | r   | r/i | r   |
+shf      | r   | r/i | r   |
+and      | r   | r/i | r   |
+or       | r   | r/i | r   |
 save     | r/i | r/i |     | Write lower byte of A to mem[B]
 savew    | r/i | r/i |     | Write A to mem[B]
 saveh    | r/i | r/i |     | Write lower byte of A to mem[0xFFFF + B]

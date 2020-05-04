@@ -17,21 +17,21 @@ validateInstruction opcode operands = if validOperandsForOpcode opcode operands
                                       else Nothing
 
 validOperandsForOpcode :: Opcode -> [Operand] -> Bool
-validOperandsForOpcode Add [a, b, c] = isRI a && isRI b && isR c
+validOperandsForOpcode Add [a, b, c] = isR a && isRI b && isR c
 validOperandsForOpcode Add _ = False
-validOperandsForOpcode Sub [a, b, c] = isRI a && isRI b && isR c
+validOperandsForOpcode Sub [a, b, c] = isR a && isRI b && isR c
 validOperandsForOpcode Sub _ = False
-validOperandsForOpcode Div [a, b, c] = isRI a && isRI b && isR c
+validOperandsForOpcode Div [a, b, c] = isR a && isRI b && isR c
 validOperandsForOpcode Div _ = False
-validOperandsForOpcode Mul [a, b, c] = isRI a && isRI b && isR c
+validOperandsForOpcode Mul [a, b, c] = isR a && isRI b && isR c
 validOperandsForOpcode Mul _ = False
-validOperandsForOpcode Xor [a, b, c] = isRI a && isRI b && isR c
+validOperandsForOpcode Xor [a, b, c] = isR a && isRI b && isR c
 validOperandsForOpcode Xor _ = False
-validOperandsForOpcode Shf [a, b, c] = isRI a && isRI b && isR c
+validOperandsForOpcode Shf [a, b, c] = isR a && isRI b && isR c
 validOperandsForOpcode Shf _ = False
-validOperandsForOpcode And [a, b, c] = isRI a && isRI b && isR c
+validOperandsForOpcode And [a, b, c] = isR a && isRI b && isR c
 validOperandsForOpcode And _ = False
-validOperandsForOpcode Or  [a, b, c] = isRI a && isRI b && isR c
+validOperandsForOpcode Or  [a, b, c] = isR a && isRI b && isR c
 validOperandsForOpcode Or _ = False
 validOperandsForOpcode Saveh [a, b] = isRI a && isRI b
 validOperandsForOpcode Saveh _ = False
