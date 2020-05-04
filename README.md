@@ -149,7 +149,7 @@ Control byte:
 * `(IIII CCCC)`
 * `(C)` Command 4 bit index
   * Index of GPU command to execute
-  * 0x0: sprite
+  * 0x0: blit
   * 0x1: line
   * 0x2: fill
   * 0x3: scroll
@@ -171,7 +171,7 @@ Color    | 0..15
 
 Mnemonic | Index | Arguments      | Description
 -------- | ----- | -------------- | -----------
-Sprite   | 0     | SprIx, X, Y    | Blit sprite with SprIx to X,Y position, where X,Y is top-left corner
+Blit     | 0     | SprIx, X, Y    | Blit sprite with SprIx to X,Y position, where X,Y is top-left corner
 Line     | 1     | X1, Y1, X2, Y2 | Draw a line from X1,Y1 to X2,Y2 using current color
 Fill     | 2     | X1, Y1, X2, Y2 | Draw filled rectangle with current color with top level corner X1,Y1 and right bottom corner at X2,Y2
 Scroll   | 3     | N, M           | Scroll screen to horizontally by N and vertically by M pixels, filling new space with current color
