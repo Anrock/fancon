@@ -29,24 +29,22 @@
 
 ### Binary instruction format
 
-First instruction byte: `ooooottt`
+First instruction byte: `oooooott`
 
 `o` - opcode bit
 
 `t` - operand type bit, if set then operand is immediate, otherwise - register or unused
 
-Operand values are packed in folowing bytes depending on `ttt` bits in first instruction byte:
+If there are three operands - third one is always a register
 
-`ttt` pattern | following bytes
+Operand values are packed in folowing bytes depending on `tt` bits in first instruction byte:
+
+`tt` pattern  | following bytes
 ------------- | ---------------
-`000`         | `xxaaabbb xxxxxccc`
-`001`         | `xxaaabbb cccccccc cccccccc`
-`010`         | `xxaaaccc bbbbbbbb bbbbbbbb`
-`100`         | `xxbbbccc aaaaaaaa aaaaaaaa`
-`101`         | `xxxxxbbb aaaaaaaa aaaaaaaa cccccccc cccccccc`
-`110`         | `xxxxxccc aaaaaaaa aaaaaaaa bbbbbbbb bbbbbbbb`
-`011`         | `xxxxxaaa bbbbbbbb bbbbbbbb cccccccc cccccccc`
-`111`         | `aaaaaaaa aaaaaaaa bbbbbbbb bbbbbbbb cccccccc cccccccc`
+`00`          | `xxaaabbb xxxxxccc`
+`01`          | `xxaaaccc bbbbbbbb bbbbbbbb`
+`10`          | `xxbbbccc aaaaaaaa aaaaaaaa`
+`11`          | `xxxxxccc aaaaaaaa aaaaaaaa bbbbbbbb bbbbbbbb`
 
 Where `x` - unused bit, `a`, `b`, `c` - instruction operand values
 
