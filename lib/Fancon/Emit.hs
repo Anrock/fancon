@@ -1,4 +1,4 @@
-module Fancon.Emit (emit, pack) where
+module Fancon.Emit (emit) where
 
 import Prelude hiding (Word)
 import qualified Data.ByteString.Lazy as B
@@ -18,7 +18,7 @@ emitInstruction ins@Instruction{operands} =
   emitFirstByte ins <> emitOperands (sortBy packingOrder operands)
 
 emitFirstByte :: Instruction -> B.Builder
-emitFirstByte (Instruction opcode operands) = pack opcodeByte (layoutByte operands)
+emitFirstByte (Instruction opcode operands) = packOpcodeAndLayout opcodeByte (layoutByte operands)
   where opcodeByte = fromIntegral . fromEnum $ opcode
 
 layoutByte :: [Operand] -> Byte
@@ -33,10 +33,13 @@ packingOrder _ (Register _) = GT
 packingOrder (Immediate _) _ = GT
 
 emitOperands :: [Operand] -> B.Builder
-emitOperands (Register a:Register b:rest) = pack a b <> emitOperands rest
+emitOperands (Register a:Register b:rest) = packNibbles a b <> emitOperands rest
 emitOperands (Register a:rest) = B.word8 a <> emitOperands rest
 emitOperands (Immediate a:rest) = B.word16BE a <> emitOperands rest
 emitOperands [] = mempty
 
-pack :: Byte -> Byte -> B.Builder
-pack a b = B.word8 $ shiftL a 3 .|. b
+packNibbles :: Byte -> Byte -> B.Builder
+packNibbles a b = B.word8 $ shiftL a 3 .|. b
+
+packOpcodeAndLayout :: Byte -> Byte -> B.Builder
+packOpcodeAndLayout op lay = B.word8 $ shiftL op 2 .|. lay
