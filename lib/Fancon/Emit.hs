@@ -22,8 +22,10 @@ emitFirstByte (Instruction opcode operands) = packOpcodeAndLayout opcodeByte (la
   where opcodeByte = fromIntegral . fromEnum $ opcode
 
 layoutByte :: [Operand] -> Byte
-layoutByte operands = fst $ foldr f (zeroBits, length operands) operands
+layoutByte operands = fst $ foldr f (zeroBits, (length operands - 1)) operands
   where f :: Operand -> (Byte, Int) -> (Byte, Int)
+        -- TODO: Hack to omit implicit last register operand in arith
+        f (Register _) (b, 1) = (b, 0)
         f (Register _) (b, ix) = (clearBit b ix, pred ix)
         f (Immediate _) (b, ix) = (setBit b ix, pred ix)
 
