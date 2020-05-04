@@ -231,3 +231,14 @@ jlt      | r   | r/i |     | Jump to mem[B] if A is <0
 jez      | r   | r/i |     | Jump to mem[B] if A is 0
 int      |     |     |     | Interrupt
 brk      |     |     |     | Break
+
+Instructions not implemented but can be improvised from existings ones:
+
+Mnemonic | A   | B   | C   | Instead use
+-------- | --- | --- | --- | -----------
+set      | r/i | r   |     | add r0 A B
+nop      |     |     |     | add r0 r0 r0 (or any other arith or logic instruction)
+cmp      | r/i | r/i | r   | sub A B C
+inc      | r   |     |     | add A 1 A
+dec      | r   |     |     | sub A 1 A
+jmp      | r/i |     |     | jez r0 A
