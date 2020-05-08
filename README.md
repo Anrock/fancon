@@ -29,24 +29,52 @@
 
 ### Binary instruction format
 
-First instruction byte: `oooooott`
+Each instruction consists of 1 up to 5 bytes.
 
-`o` - opcode bit
+First byte is instruction description byte, rest is instruction operands
 
-`t` - operand type bit, if set then operand is immediate, otherwise - register or unused
+Description byte format is `TT?????` where `TT` is instruction type and rest of
+bits are type-specific.
 
-If there are three operands - third one is always a register
+Instruction type may be of `11`, `01`, `10` and `00` where
+* `11` is A-instruction
+* `01` is M-instruction
+* `10` is J-Instruction
+* `00` is S-instruction
 
-Operand values are packed in folowing bytes depending on `tt` bits in first instruction byte:
+A-instruction uses three operands: A, B and C.
+Value of register A is combined with B using operation specified by F and then 
+stored to register specified by C. A-instruction-specific bit format is as follows:
+`FFFxxI`, where `F` specifies operation:
+* `000` for addition
+* `001` for substraction
+* `010` for division
+* `011` for multiplication
+* `100` for bitwise xor
+* `101` for bit shift
+* `110` for bitwise and
+* `111` for bitwise or
+`I`mmediate indicates if B is an immediate value
 
-`tt` pattern  | following bytes
-------------- | ---------------
-`00`          | `xxaaabbb xxxxxccc`
-`01`          | `xxaaaccc bbbbbbbb bbbbbbbb`
-`10`          | `xxbbbccc aaaaaaaa aaaaaaaa`
-`11`          | `xxxxxccc aaaaaaaa aaaaaaaa bbbbbbbb bbbbbbbb`
+M-instructions are using two operands and have this specific bit pattern:
+`FHWxAB`. `F` is operation - `1` for store and `0` for load. `H`igh indicates if
+0xFFFF should be added to memory address specified by operand in order to access
+addresses above 0xFFFF. `W`ord indicates if stored\loaded value is word or a
+byte. First operand specifies memory address and second operand is either a
+value to write in case of store or a destination register for load. `AB` bits
+are set accordingly. Load can only have register as destination, so `A` is
+unused if `F` is `0`.
 
-Where `x` - unused bit, `a`, `b`, `c` - instruction operand values
+J-instruction are using two operands. First operand is a register to check for
+condition and second operand is immediate or register containing address for a
+jump. Specific bits: `CCxxxI`, where `C`ondition may be one of
+* `00` for greater than zero
+* `01` for less than zero
+* `10` for equal to zero
+`I` indicates that second operand is immediate.
+
+S-instruction don't have operands. Only first bit is significant, indicating if
+it's `int` for `1` or `brk` if it's `0`.
 
 ## Memory map
 
