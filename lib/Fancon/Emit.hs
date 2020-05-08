@@ -4,7 +4,7 @@ import Prelude hiding (Word)
 import qualified Data.ByteString.Lazy as B
 import qualified Data.ByteString.Builder as B
 import Data.List (sortBy)
-import Data.Bits (shiftL, (.|.), zeroBits, setBit, clearBit)
+import Data.Bits (shiftL, (.|.), zeroBits)
 import Data.Array
 
 import Fancon.Instruction.Internal
@@ -15,19 +15,80 @@ emit = B.toLazyByteString . mconcat . fmap emitInstruction . elems
 
 emitInstruction :: Instruction -> B.Builder
 emitInstruction ins@Instruction{operands} =
-  emitFirstByte ins <> emitOperands (sortBy packingOrder operands)
+  emitDescriptionByte ins <> emitOperands (sortBy packingOrder operands)
 
-emitFirstByte :: Instruction -> B.Builder
-emitFirstByte (Instruction opcode operands) = packOpcodeAndLayout opcodeByte (layoutByte operands)
-  where opcodeByte = fromIntegral . fromEnum $ opcode
+emitDescriptionByte :: Instruction -> B.Builder
+emitDescriptionByte i = B.word8 $ zeroBits .|. typeBits (opcode i) .|. typeSpecificBits i
 
-layoutByte :: [Operand] -> Byte
-layoutByte operands = fst $ foldr f (zeroBits, (length operands - 1)) operands
-  where f :: Operand -> (Byte, Int) -> (Byte, Int)
-        -- TODO: Hack to omit implicit last register operand in arith
-        f (Register _) (b, 1) = (b, 0)
-        f (Register _) (b, ix) = (clearBit b ix, pred ix)
-        f (Immediate _) (b, ix) = (setBit b ix, pred ix)
+typeBits :: Opcode -> Byte
+typeBits opcode =
+  let aType = 0b11000000
+      mType = 0b01000000
+      jType = 0b10000000
+      sType = 0b00000000
+   in case opcode of
+     Add -> aType
+     Sub -> aType
+     Div -> aType
+     Mul -> aType
+     Xor -> aType
+     Shf -> aType
+     And -> aType
+     Or -> aType
+     Saveh -> mType
+     Savehw -> mType
+     Save -> mType
+     Savew -> mType
+     Loadh -> mType
+     Loadhw -> mType
+     Load -> mType
+     Loadw -> mType
+     Jgz -> jType
+     Jlt -> jType
+     Jez -> jType
+     Int -> sType
+     Brk -> sType
+
+isImmediate :: Operand -> Bool
+isImmediate Immediate {} = True
+isImmediate _ = False
+
+aImmediateBit :: [Operand] -> Byte
+aImmediateBit operands
+  | isImmediate (operands !! 0) = 0b00000010
+  | otherwise = 0b0
+
+bImmediateBit :: [Operand] -> Byte
+bImmediateBit operands
+  | isImmediate (operands !! 1) = 0b00000001
+  | otherwise = 0b0
+
+typeSpecificBits :: Instruction -> Byte
+typeSpecificBits (Instruction opcode operands) =
+  let aImmediate = aImmediateBit operands
+      bImmediate = bImmediateBit operands
+   in case opcode of
+        Add    -> 0b00_0000_00 .|. bImmediate
+        Sub    -> 0b00_0010_00 .|. bImmediate
+        Div    -> 0b00_0100_00 .|. bImmediate
+        Mul    -> 0b00_0110_00 .|. bImmediate
+        Xor    -> 0b00_1000_00 .|. bImmediate
+        Shf    -> 0b00_1010_00 .|. bImmediate
+        And    -> 0b00_1100_00 .|. bImmediate
+        Or     -> 0b00_1110_00 .|. bImmediate
+        Saveh  -> 0b00_1100_00 .|. aImmediate .|. bImmediate
+        Savehw -> 0b00_1110_00 .|. aImmediate .|. bImmediate
+        Save   -> 0b00_1000_00 .|. aImmediate .|. bImmediate
+        Savew  -> 0b00_1010_00 .|. aImmediate .|. bImmediate
+        Loadh  -> 0b00_0100_00 .|. bImmediate
+        Loadhw -> 0b00_0110_00 .|. bImmediate
+        Load   -> 0b00_0000_00 .|. bImmediate
+        Loadw  -> 0b00_0010_00 .|. bImmediate
+        Jgz    -> 0b10_0000_00 .|. aImmediate .|. bImmediate
+        Jlt    -> 0b10_0100_00 .|. aImmediate .|. bImmediate
+        Jez    -> 0b10_1000_00 .|. aImmediate .|. bImmediate
+        Int    -> 0b00_0000_00
+        Brk    -> 0b00_1000_00
 
 packingOrder :: Operand -> Operand -> Ordering
 packingOrder (Register _) _ = LT
@@ -43,5 +104,3 @@ emitOperands [] = mempty
 packNibbles :: Byte -> Byte -> B.Builder
 packNibbles a b = B.word8 $ shiftL a 3 .|. b
 
-packOpcodeAndLayout :: Byte -> Byte -> B.Builder
-packOpcodeAndLayout op lay = B.word8 $ shiftL op 2 .|. lay
