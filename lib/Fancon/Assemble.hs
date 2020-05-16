@@ -50,9 +50,9 @@ initialAssemblerState = AssemblerState { errors = []
                                        , lineNumber = 1
                                        , significantLineNumber = 1}
 
-assemble :: Array Int P.AST -> Either [Error] ([Warning], Module)
+assemble :: Traversable t => t P.AST -> Either [Error] ([Warning], Module)
 assemble = validateAssemblerState . semChain
-  where semChain :: Array Int P.AST -> AssemblerState
+  where semChain :: Traversable t => t P.AST -> AssemblerState
         semChain = fst . run . runState initialAssemblerState . runAssembler
 
 validateAssemblerState :: AssemblerState -> Either [Error] ([Warning], Module)
@@ -103,7 +103,7 @@ bumpLineNumber = modify (\s@AssemblerState{lineNumber} -> s{lineNumber = succ li
 bumpSignificantLineNumber :: Member (State AssemblerState) r => Sem r ()
 bumpSignificantLineNumber = modify (\s@AssemblerState{significantLineNumber} -> s{significantLineNumber = succ significantLineNumber})
 
-runAssembler :: Array Int P.AST -> Sem '[State AssemblerState] ()
+runAssembler :: Traversable t => t P.AST -> Sem '[State AssemblerState] ()
 runAssembler = mapM_ assembleLine
   where assembleLine :: P.AST -> Sem '[State AssemblerState] ()
         assembleLine = \case
