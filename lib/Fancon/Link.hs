@@ -14,7 +14,7 @@ data Error = Undefined Text
            | RelocationPropertyMismatch Text
            deriving (Eq, Show)
 
-link :: [Module] -> Module
+link :: Traversable t => t Module -> Module
 link = foldr merge (emptySymbolTable, array (1, 0) [])
 
 merge :: Module -> Module -> Module
