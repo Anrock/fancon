@@ -22,8 +22,8 @@
 
 ### Registers
 * 16 bits wide
-* R0..R7 - general purpose, RW
 * R0 always reads 0, no effect on write
+* R1..R15 - general purpose, RW
 * PC - program counter, RO
 * SP - stack pointer, RW
 

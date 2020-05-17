@@ -102,5 +102,5 @@ emitOperands (Immediate a:rest) = B.word16BE a <> emitOperands rest
 emitOperands [] = mempty
 
 packNibbles :: Byte -> Byte -> B.Builder
-packNibbles a b = B.word8 $ shiftL a 3 .|. b
+packNibbles a b = B.word8 $ shiftL a 4 .|. b
 
