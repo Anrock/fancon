@@ -258,7 +258,6 @@ jgz      | r   | r/i |     | Jump to mem[B] if A is >0
 jlt      | r   | r/i |     | Jump to mem[B] if A is <0
 jez      | r   | r/i |     | Jump to mem[B] if A is 0
 int      |     |     |     | Interrupt
-brk      |     |     |     | Break
 hlt      |     |     |     | Halt CPU until next interrupt
 
 Instructions not implemented but can be improvised from existings ones:

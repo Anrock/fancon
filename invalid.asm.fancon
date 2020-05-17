@@ -3,3 +3,4 @@ add r0
 inv
 
 add 10 r0 r0
+brk

@@ -30,7 +30,6 @@ data Opcode = Add
             | Jlt
             | Jez
             | Int
-            | Brk
             | Hlt
             deriving (Eq, Show, Bounded, Enum, Read)
 
@@ -61,7 +60,6 @@ arity Jgz    = 2
 arity Jlt    = 2
 arity Jez    = 2
 arity Int    = 0
-arity Brk    = 0
 arity Hlt   = 0
 
 maxArity :: Int

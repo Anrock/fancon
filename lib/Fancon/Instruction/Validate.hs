@@ -57,8 +57,6 @@ validOperandsForOpcode Jez [a, b] = isR a && isRI b
 validOperandsForOpcode Jez _ = False
 validOperandsForOpcode Int [] = True
 validOperandsForOpcode Int _ = False
-validOperandsForOpcode Brk [] = True
-validOperandsForOpcode Brk _ = False
 validOperandsForOpcode Hlt [] = True
 validOperandsForOpcode Hlt _ = False
 
