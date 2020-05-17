@@ -19,7 +19,22 @@ common warnings
                -Wno-monomorphism-restriction
 
 common ghc-options
-  ghc-options: -O2 -flate-specialise -fspecialise-aggressively -fplugin=Polysemy.Plugin
+  ghc-options: -O2
+
+common polysemy
+  ghc-options: -flate-specialise -fspecialise-aggressively -fplugin=Polysemy.Plugin
+  build-depends: polysemy
+               , polysemy-plugin
+  default-extensions: DataKinds
+                    , FlexibleContexts
+                    , GADTs
+                    , LambdaCase
+                    , PolyKinds
+                    , RankNTypes
+                    , ScopedTypeVariables
+                    , TypeApplications
+                    , TypeOperators
+                    , TypeFamilies
 
 common language
   default-language: Haskell2010
@@ -31,15 +46,6 @@ common language
                       , DuplicateRecordFields
                       , NamedFieldPuns
                       , LambdaCase
-                      , DataKinds
-                      , FlexibleContexts
-                      , GADTs
-                      , PolyKinds
-                      , RankNTypes
-                      , ScopedTypeVariables
-                      , TypeApplications
-                      , TypeOperators
-                      , TypeFamilies
                       , TemplateHaskell
                       , BinaryLiterals
                       , NumericUnderscores
@@ -59,7 +65,7 @@ common deps
                  , interpolate
 
 library
-  import: warnings, ghc-options, language, deps
+  import: warnings, ghc-options, language, deps, polysemy
   hs-source-dirs:   lib
   exposed-modules:  Fancon
   other-modules:    Fancon.Memory
@@ -73,7 +79,7 @@ library
                   , Fancon.Link
 
 executable fancon
-  import: ghc-options, warnings, language, deps
+  import: ghc-options, warnings, language, deps, polysemy
   hs-source-dirs:   src
   main-is:          Main.hs
   ghc-options:      -threaded
