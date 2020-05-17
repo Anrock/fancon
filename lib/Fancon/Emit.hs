@@ -22,10 +22,10 @@ emitDescriptionByte i = B.word8 $ zeroBits .|. typeBits (opcode i) .|. typeSpeci
 
 typeBits :: Opcode -> Byte
 typeBits opcode =
-  let aType = 0b11000000
+  let aType = 0b00000000
       mType = 0b01000000
       jType = 0b10000000
-      sType = 0b00000000
+      sType = 0b11000000
    in case opcode of
      Add -> aType
      Sub -> aType

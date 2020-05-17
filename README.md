@@ -37,10 +37,10 @@ Description byte format is `TT?????` where `TT` is instruction type and rest of
 bits are type-specific.
 
 Instruction type may be of `11`, `01`, `10` and `00` where
-* `11` is A-instruction
+* `00` is A-instruction
 * `01` is M-instruction
 * `10` is J-Instruction
-* `00` is S-instruction
+* `11` is S-instruction
 
 A-instruction uses three operands: A, B and C.
 Value of register A is combined with B using operation specified by F and then 

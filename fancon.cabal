@@ -78,6 +78,14 @@ library
                   , Fancon.Symboltable
                   , Fancon.Link
 
+test-suite test
+  import: warnings, ghc-options, language
+  ghc-options:    -threaded
+  type:           exitcode-stdio-1.0
+  hs-source-dirs: test
+  main-is:        Main.hs
+  build-depends:  base, fancon, tasty, tasty-hunit, array, bytestring
+
 executable fancon
   import: ghc-options, warnings, language, deps, polysemy
   hs-source-dirs:   src
