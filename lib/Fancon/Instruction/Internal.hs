@@ -31,6 +31,7 @@ data Opcode = Add
             | Jez
             | Int
             | Brk
+            | Hlt
             deriving (Eq, Show, Bounded, Enum, Read)
 
 data Operand = Register Byte | Immediate Word deriving (Eq, Show)
@@ -61,6 +62,7 @@ arity Jlt    = 2
 arity Jez    = 2
 arity Int    = 0
 arity Brk    = 0
+arity Hlt   = 0
 
 maxArity :: Int
 maxArity = 3

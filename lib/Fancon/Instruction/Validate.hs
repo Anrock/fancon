@@ -59,6 +59,8 @@ validOperandsForOpcode Int [] = True
 validOperandsForOpcode Int _ = False
 validOperandsForOpcode Brk [] = True
 validOperandsForOpcode Brk _ = False
+validOperandsForOpcode Hlt [] = True
+validOperandsForOpcode Hlt _ = False
 
 isR, isI, isRI :: Operand -> Bool
 isR Register {} = True

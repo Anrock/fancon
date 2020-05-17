@@ -48,6 +48,7 @@ typeBits opcode =
      Jez -> jType
      Int -> sType
      Brk -> sType
+     Hlt -> sType
 
 isImmediate :: Operand -> Bool
 isImmediate Immediate {} = True
@@ -87,8 +88,9 @@ typeSpecificBits (Instruction opcode operands) =
         Jgz    -> 0b10_0000_00 .|. aImmediate .|. bImmediate
         Jlt    -> 0b10_0100_00 .|. aImmediate .|. bImmediate
         Jez    -> 0b10_1000_00 .|. aImmediate .|. bImmediate
-        Int    -> 0b00_0000_00
-        Brk    -> 0b00_1000_00
+        Int    -> 0b00_00_0000
+        Brk    -> 0b00_10_0000
+        Hlt   -> 0b00_11_0000
 
 packingOrder :: Operand -> Operand -> Ordering
 packingOrder (Register _) _ = LT

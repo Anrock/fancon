@@ -26,3 +26,4 @@ jgz r1 another-local-function
 .label another-local-function
 add r0 1 r1
 jgz r0 some-external-function
+hlt
