@@ -88,8 +88,9 @@ test-suite test
   build-depends:  base, fancon, tasty, tasty-hunit, array, bytestring, text
 
 executable fancon
-  import: ghc-options, warnings, language, deps, polysemy
-  hs-source-dirs:   src
-  main-is:          Main.hs
-  ghc-options:      -threaded
-  build-depends:    fancon
+  import:         ghc-options, warnings, language, deps, polysemy
+  hs-source-dirs: src
+  main-is:        Main.hs
+  ghc-options:    -threaded
+  build-depends:  fancon, optparse-applicative
+  other-modules:  Arguments
