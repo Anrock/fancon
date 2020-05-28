@@ -1,38 +1,40 @@
 module Fancon.Symboltable
-  ( Symbol(..)
-  , SymbolName
+  ( -- * Types and constructors
+    Symbol(..)
   , SymbolTable
+  , emptySymbolTable
 
+  -- * Convenience type synonyms
+  , SymbolName
   , LineIx
   , OpIx
   , SymbolReference
 
+  -- * Queries
   , exports
   , imports
   , local
   , references
   , referencesToLocals
-
-  , emptySymbolTable
-
-  , addConstant
-  , addExport
-  , addImport
-  , addLocation
-  , addReference
-
   , isDefined
-
+  -- ** Possible warnings
   , importNameCollisions
   , undefinedExports
   , undefinedLocals
   , unusedImports
   , unusedLocals
 
+  -- * Modification
+  , addConstant
+  , addExport
+  , addImport
+  , addLocation
+  , addReference
+  -- ** Offsetting
   , offsetSymbolTable
   , offsetSymbol
   , offsetReference
-
+  -- ** Resolving
   , resolveImportsFrom
 
   , printSymbolTable
@@ -48,7 +50,9 @@ import Data.String.Interpolate
 
 type SymbolName = Text
 data Symbol = Location { value :: Int }
+            -- ^ Code location, have to be offsetted depending on code location
             | Constant { value :: Int }
+            -- ^ Constant value, like @timeout = 1 * 60@, doesn't have to be offsetted
             deriving (Eq, Show)
 
 type LineIx = Int
