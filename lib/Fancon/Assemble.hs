@@ -5,7 +5,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Polysemy
 import Polysemy.State
-import Control.Monad (mapM_, forM)
+import Control.Monad (forM)
 import Text.Read (readMaybe)
 import Data.Array
 
@@ -43,14 +43,16 @@ initialAssemblerState = AssemblerState { errors = []
                                        , lineNumber = 1
                                        , significantLineNumber = 1}
 
-assemble :: Array Int P.AST -> ([Warning], Either [Error] Module)
+assemble :: Array Int P.AST -> Either [Error] ([Warning], Module)
 assemble = validateAssemblerState . semChain
   where semChain :: Array Int P.AST -> AssemblerState
         semChain = fst . run . runState initialAssemblerState . runAssembler
 
-validateAssemblerState :: AssemblerState -> ([Warning], Either [Error] Module)
+validateAssemblerState :: AssemblerState -> Either [Error] ([Warning], Module)
 validateAssemblerState AssemblerState{warnings, errors, symbolTable, instructions} =
-  (warnings, if not . null $ errors then Left errors else Right (symbolTable, listArray (1, length instructions) instructions))
+  if not . null $ errors
+  then Left errors
+  else Right (warnings, (symbolTable, listArray (1, length instructions) instructions))
 
 emitErrorAtCurrentLine :: Member (State AssemblerState) r => (LineIx -> Error) -> Sem r ()
 emitErrorAtCurrentLine e = do line <- gets significantLineNumber

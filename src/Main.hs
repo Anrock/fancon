@@ -44,17 +44,16 @@ compileFile fileContents =
       Right ast -> do sequence_ $ print <$> assocs ast
                       putStrLn ""
 
-                      let (warnings, assembleResult) = assemble ast
-                      unless (null warnings) $ do
-                        putStrLn "Warnings: "
-                        sequence_ (print <$> warnings)
-                        putStrLn ""
-
-                      case assembleResult of
+                      case assemble ast of
                         Left errors -> do putStrLn "Errors: "
                                           sequence_ (print <$> errors)
                                           pure Nothing
-                        Right m@(symtab, instructions) -> do
+                        Right (warnings, m@(symtab, instructions)) -> do
+                          unless (null warnings) $ do
+                            putStrLn "Warnings: "
+                            sequence_ (print <$> warnings)
+                            putStrLn ""
+
                           putStrLn $ printSymbolTable symtab
                           unless (null instructions) $ putStrLn $ printInstructions instructions
                           pure . Just $ m
