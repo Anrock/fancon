@@ -1,4 +1,4 @@
-module Fancon.Assemble (assemble, SymbolTable, Module) where
+module Fancon.Assemble (assemble, SymbolTable, Module, Warning(..), Error(..)) where
 
 import Prelude hiding (lines, const)
 import Data.Text (Text)
