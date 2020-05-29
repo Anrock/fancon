@@ -67,16 +67,16 @@ common deps
 library
   import: warnings, ghc-options, language, deps, polysemy
   hs-source-dirs:   lib
-  exposed-modules:  Fancon
-  other-modules:    Fancon.Memory
-                  , Fancon.Instruction
-                  , Fancon.Instruction.Internal
-                  , Fancon.Instruction.Validate
-                  , Fancon.Emit
-                  , Fancon.Parse
-                  , Fancon.Assemble
-                  , Fancon.Symboltable
-                  , Fancon.Link
+  exposed-modules: Fancon
+                 , Fancon.Assemble
+  other-modules: Fancon.Memory
+               , Fancon.Instruction
+               , Fancon.Instruction.Internal
+               , Fancon.Instruction.Validate
+               , Fancon.Emit
+               , Fancon.Parse
+               , Fancon.Symboltable
+               , Fancon.Link
 
 test-suite test
   import: warnings, ghc-options, language
