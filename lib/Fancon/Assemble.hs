@@ -9,10 +9,13 @@ import Control.Monad (forM)
 import Text.Read (readMaybe)
 import Data.Array
 import qualified Data.Map as M
+import qualified Data.Set as S
+import qualified Data.List.NonEmpty as NE
 
 import qualified Fancon.Instruction as Ins
 import qualified Fancon.Parse as P
-import Fancon.Symboltable
+import Fancon.Symboltable (SymbolTable, LineIx, SymbolName)
+import qualified Fancon.Symboltable as Sym
 
 type CommandText = Text
 type Module = (SymbolTable, Array Int Ins.Instruction)
@@ -52,10 +55,32 @@ assemble = validateAssemblerState . semChain
         semChain = fst . run . runState initialAssemblerState . runAssembler
 
 validateAssemblerState :: AssemblerState -> Either [Error] ([Warning], Module)
-validateAssemblerState AssemblerState{warnings, errors, symbolTable, instructions} =
-  if not . null $ errors
-  then Left errors
-  else Right (warnings, (symbolTable, listArray (1, length instructions) instructions))
+validateAssemblerState AssemblerState{warnings, errors, symbolTable, instructions, locations} =
+  case validateSymtab locations symbolTable of
+    Left symErrors -> Left $ errors <> symErrors
+    Right symWarns ->
+      if not . null $ errors
+      then Left errors
+      else Right (warnings <> symWarns, (symbolTable, listArray (1, length instructions) instructions))
+
+validateSymtab :: M.Map SymbolName LineIx -> SymbolTable -> Either [Error] [Warning]
+validateSymtab locs s = if not . null $ errors
+                        then Left errors
+                        else Right warnings
+  where importCollisions = toDuplicate <$> (S.toList . Sym.importNameCollisions $ s)
+        undefinedExports = toUndefined <$> (S.toList . Sym.undefinedExports $ s)
+        undefineds = concat . M.elems . M.mapWithKey
+                            (\sym refs -> NE.toList $ UndefinedSymbolReference sym <$> NE.map fst refs)
+                              $ Sym.undefineds s
+        unusedLocals =  toUnreferenced <$> (S.toList . Sym.unusedLocals $ s)
+        unusedImports = toUnreferenced <$> (S.toList . Sym.unusedImports $ s)
+
+        toUndefined sym = UndefinedSymbolReference sym (locs M.! sym)
+        toUnreferenced sym = UnreferencedSymbol sym (locs M.! sym)
+        toDuplicate sym = DuplicateSymbolDefinition sym (Sym.value $ Sym.local s M.! sym)
+
+        errors = undefinedExports <> undefineds <> importCollisions
+        warnings = unusedLocals <> unusedImports
 
 emitErrorAtCurrentLine :: Member (State AssemblerState) r => (LineIx -> Error) -> Sem r ()
 emitErrorAtCurrentLine e = do line <- gets significantLineNumber
@@ -93,7 +118,7 @@ instruction opcodeStr operands =
         (_, P.Register r)  -> pure $ Ins.Register r
         (_, P.Immediate i) -> pure $ Ins.Immediate i
         (opIx, P.Label l)  -> do (symtab, lineIx) <- (,) <$> gets symbolTable <*> gets significantLineNumber
-                                 let symtab' = addReference l (lineIx, opIx) symtab
+                                 let symtab' = Sym.addReference l (lineIx, opIx) symtab
                                  modify (\s -> s{symbolTable = symtab'})
                                  pure $ Ins.Immediate 0
       case Ins.validateInstruction opcode operands' of
@@ -106,9 +131,9 @@ command txt
   | otherwise =
       case T.words txt of
         ["label", l] -> label l
-        ["export", l] -> do symtab' <- addExport l <$> gets symbolTable
+        ["export", l] -> do symtab' <- Sym.addExport l <$> gets symbolTable
                             modify (\s -> s{symbolTable = symtab'})
-        ["import", l] -> do symtab' <- addImport l <$> gets symbolTable
+        ["import", l] -> do symtab' <- Sym.addImport l <$> gets symbolTable
                             modify (\s -> s{symbolTable = symtab'})
         ["const", l, sval] -> const l sval
         _ -> do line <- gets lineNumber
@@ -116,16 +141,16 @@ command txt
 
 label :: Text -> Sem '[State AssemblerState] ()
 label l = do location <- gets significantLineNumber
-             defineFirstOrError l (addLocation l location)
+             defineFirstOrError l (Sym.addLocation l location)
 
 const :: Text -> Text -> Sem '[State AssemblerState] ()
 const l sval = case (readMaybe . T.unpack $ sval) :: Maybe Word of
-                 (Just val) -> defineFirstOrError l (addConstant l (fromIntegral val))
+                 (Just val) -> defineFirstOrError l (Sym.addConstant l (fromIntegral val))
                  Nothing    -> emitErrorAtCurrentLine (InvalidWord sval)
 
 defineFirstOrError :: SymbolName -> (SymbolTable -> SymbolTable) -> Sem '[State AssemblerState] ()
 defineFirstOrError name f = do symtab <- gets symbolTable
-                               if isDefined name symtab
+                               if Sym.isDefined name symtab
                                then emitErrorAtCurrentLine (DuplicateSymbolDefinition name)
                                else do line <- gets lineNumber
                                        locations <- gets locations
