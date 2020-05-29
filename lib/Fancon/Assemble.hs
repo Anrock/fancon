@@ -8,6 +8,7 @@ import Polysemy.State
 import Control.Monad (forM)
 import Text.Read (readMaybe)
 import Data.Array
+import qualified Data.Map as M
 
 import qualified Fancon.Instruction as Ins
 import qualified Fancon.Parse as P
@@ -31,6 +32,7 @@ data AssemblerState = AssemblerState { errors :: [Error]
                                      , warnings :: [Warning]
                                      , instructions :: [Ins.Instruction]
                                      , symbolTable :: SymbolTable
+                                     , locations :: M.Map SymbolName LineIx
                                      , lineNumber :: Int
                                      , significantLineNumber :: Int
                                      }
@@ -39,7 +41,8 @@ initialAssemblerState :: AssemblerState
 initialAssemblerState = AssemblerState { errors = []
                                        , warnings = []
                                        , instructions = []
-                                       , symbolTable = emptySymbolTable
+                                       , symbolTable = Sym.emptySymbolTable
+                                       , locations = M.empty
                                        , lineNumber = 1
                                        , significantLineNumber = 1}
 
@@ -124,4 +127,6 @@ defineFirstOrError :: SymbolName -> (SymbolTable -> SymbolTable) -> Sem '[State 
 defineFirstOrError name f = do symtab <- gets symbolTable
                                if isDefined name symtab
                                then emitErrorAtCurrentLine (DuplicateSymbolDefinition name)
-                               else modify (\s -> s{symbolTable = f symtab})
+                               else do line <- gets lineNumber
+                                       locations <- gets locations
+                                       modify (\s -> s{symbolTable = f symtab, locations = M.insert name line locations})
