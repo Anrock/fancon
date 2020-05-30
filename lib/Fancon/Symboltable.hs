@@ -1,3 +1,4 @@
+-- TODO: shrink API, provide only basic combinators
 module Fancon.Symboltable
   ( -- * Types and constructors
     Symbol(..)
