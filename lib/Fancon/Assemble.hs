@@ -150,8 +150,8 @@ const l sval = case (readMaybe . T.unpack $ sval) :: Maybe Word of
 
 defineFirstOrError :: SymbolName -> (SymbolTable -> SymbolTable) -> Sem '[State AssemblerState] ()
 defineFirstOrError name f = do symtab <- gets symbolTable
+                               line <- gets lineNumber
                                if Sym.isDefined name symtab
-                               then emitErrorAtCurrentLine (DuplicateSymbolDefinition name)
-                               else do line <- gets lineNumber
-                                       locations <- gets locations
+                               then emitError $ DuplicateSymbolDefinition name line
+                               else do locations <- gets locations
                                        modify (\s -> s{symbolTable = f symtab, locations = M.insert name line locations})
