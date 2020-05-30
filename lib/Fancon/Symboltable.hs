@@ -21,7 +21,7 @@ module Fancon.Symboltable
   -- ** Possible warnings
   , importNameCollisions
   , undefinedExports
-  , undefinedLocals
+  , undefineds
   , unusedImports
   , unusedLocals
 
@@ -108,8 +108,9 @@ unusedLocals s = localNameSet s \\ referencesNameSet s \\ exports s
 unusedImports :: SymbolTable -> S.Set SymbolName
 unusedImports s@SymbolTable{ imports } = imports \\ referencesNameSet s
 
-undefinedLocals :: SymbolTable -> S.Set SymbolName
-undefinedLocals s = referencesNameSet s \\ localNameSet s
+undefineds :: SymbolTable -> M.Map SymbolName (NonEmpty SymbolReference)
+undefineds s = M.restrictKeys (references s) $
+  referencesNameSet s \\ localNameSet s \\ imports s
 
 undefinedExports :: SymbolTable -> S.Set SymbolName
 undefinedExports s@SymbolTable { exports } = exports \\ localNameSet s
