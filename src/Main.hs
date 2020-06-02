@@ -1,59 +1,67 @@
 module Main (main) where
 
-import System.Environment (getArgs)
 import qualified Data.Text.IO as T
+import qualified Data.Text as T
 import Data.Text (Text)
 import Text.Megaparsec (errorBundlePretty)
 import Control.Monad
-import Data.Array
-import Data.Maybe
 import qualified Data.ByteString.Lazy as BS
+import Data.String.Interpolate.IsString
+import System.Exit (exitFailure)
 
 import Fancon
+import Fancon.Assemble
+import Arguments
 
 main :: IO ()
-main = getArgs >>= \case
-  "compile":fileNames -> compile fileNames
-  _                   -> putStrLn "Unknown command"
+main = getArguments >>= \case
+  Compile opts -> do
+    assembled <- forM (files opts) $ \file -> do
+      putStr [i|#{file}: reading... |]
+      content <- T.readFile file
+      putStr "parsing... "
+      case parse content of
+        Left e -> do
+          putStrLn . errorBundlePretty $ e
+          exitFailure
+        Right parsed -> do
+          putStr "assembling... "
+          case assemble parsed of
+            Left errors -> prettyPrintErrors content errors >> exitFailure
+            Right (warnings, m@(symtab, _)) ->
+              do unless (null warnings) $ prettyPrintWarnings content warnings
+                 when (dumpSymbolTable opts) $ putStrLn (printSymbolTable symtab)
+                 putStrLn "done!"
+                 pure m
+    putStr [i|#{output opts}: linking... |]
+    let (symtab, instructions) = link assembled
+    when (dumpSymbolTable opts) $ putStrLn (printSymbolTable symtab)
+    putStr "emitting binary... "
+    let binary = emit instructions
+    putStr "writing... "
+    BS.writeFile (output opts) binary
+    putStrLn "done!"
 
-printHeader :: String -> IO ()
-printHeader fileName = do putStrLn fileName
-                          putStrLn (replicate (length fileName) '=')
+printWithLineMention :: Text -> Int -> Text -> IO ()
+printWithLineMention file lineIx text =
+    putStrLn [i|\n#{T.lines file !! lineIx}: #{text}|] -- TODO: Show lineIx
 
-compile :: [FilePath] -> IO ()
-compile fileNames = do
-  compiledFiles <- forM fileNames $ \fileName -> do
-    printHeader fileName
-    fileContents <- T.readFile fileName
-    compileFile fileContents
+prettyPrintWarnings :: Text -> [Warning] -> IO ()
+prettyPrintWarnings file warnings = forM_ warnings \case
+  UnknownCommand txt lineIx -> printWithLineMention file lineIx
+    [i|Unknown command #{txt}|]
+  UnreferencedSymbol sym lineIx -> printWithLineMention file lineIx
+    [i|Unreferenced symbol #{sym}|]
 
-  unless (any isNothing compiledFiles) $ do
-    let compiledFiles' = fromJust <$> compiledFiles
-    printHeader "Linked"
-    let (symtab, ins) = link compiledFiles'
-    putStrLn $ printSymbolTable symtab
-    putStrLn $ printInstructions ins
-    let binary = emit ins
-    BS.writeFile "out.exe.fancon" binary
-
-compileFile :: Text -> IO (Maybe Module)
-compileFile fileContents =
-    case parse fileContents of
-      Left e -> do putStrLn . errorBundlePretty $ e
-                   pure Nothing
-      Right ast -> do sequence_ $ print <$> assocs ast
-                      putStrLn ""
-
-                      case assemble ast of
-                        Left errors -> do putStrLn "Errors: "
-                                          sequence_ (print <$> errors)
-                                          pure Nothing
-                        Right (warnings, m@(symtab, instructions)) -> do
-                          unless (null warnings) $ do
-                            putStrLn "Warnings: "
-                            sequence_ (print <$> warnings)
-                            putStrLn ""
-
-                          putStrLn $ printSymbolTable symtab
-                          unless (null instructions) $ putStrLn $ printInstructions instructions
-                          pure . Just $ m
+prettyPrintErrors :: Text -> [Error] -> IO ()
+prettyPrintErrors file errors = forM_ errors \case
+  DuplicateSymbolDefinition sym lineIx -> printWithLineMention file lineIx
+    [i|Duplicate symbol definition #{sym}|]
+  UndefinedSymbolReference sym lineIx -> printWithLineMention file lineIx
+    [i|Undefined symbol reference #{sym}|]
+  InvalidWord word lineIx -> printWithLineMention file lineIx
+    [i|Immediate must be in range 0-65535, got #{word}|]
+  InvalidOpcode opcode lineIx -> printWithLineMention file lineIx
+    [i|Invalid opcode #{opcode}|]
+  InvalidOperands operands lineIx -> printWithLineMention file lineIx
+    [i|Invalid operands for command: #{operands}|]
