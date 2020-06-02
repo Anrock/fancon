@@ -17,52 +17,49 @@ validateInstruction opcode operands = if validOperandsForOpcode opcode operands
                                       else Nothing
 
 validOperandsForOpcode :: Opcode -> [Operand] -> Bool
-validOperandsForOpcode Add [a, b, c] = isR a && isRI b && isR c
-validOperandsForOpcode Add _ = False
-validOperandsForOpcode Sub [a, b, c] = isR a && isRI b && isR c
-validOperandsForOpcode Sub _ = False
-validOperandsForOpcode Div [a, b, c] = isR a && isRI b && isR c
-validOperandsForOpcode Div _ = False
-validOperandsForOpcode Mul [a, b, c] = isR a && isRI b && isR c
-validOperandsForOpcode Mul _ = False
-validOperandsForOpcode Xor [a, b, c] = isR a && isRI b && isR c
-validOperandsForOpcode Xor _ = False
-validOperandsForOpcode Shf [a, b, c] = isR a && isRI b && isR c
-validOperandsForOpcode Shf _ = False
-validOperandsForOpcode And [a, b, c] = isR a && isRI b && isR c
-validOperandsForOpcode And _ = False
-validOperandsForOpcode Or  [a, b, c] = isR a && isRI b && isR c
-validOperandsForOpcode Or _ = False
-validOperandsForOpcode Saveh [a, b] = isRI a && isRI b
-validOperandsForOpcode Saveh _ = False
-validOperandsForOpcode Savehw [a, b] = isRI a && isRI b
-validOperandsForOpcode Savehw _ = False
-validOperandsForOpcode Save [a, b] = isRI a && isRI b
-validOperandsForOpcode Save _ = False
-validOperandsForOpcode Savew [a, b] = isRI a && isRI b
-validOperandsForOpcode Savew _ = False
-validOperandsForOpcode Loadh [a, b] = isRI a && isR b
-validOperandsForOpcode Loadh _ = False
-validOperandsForOpcode Loadhw [a, b] = isRI a && isR b
-validOperandsForOpcode Loadhw _ = False
-validOperandsForOpcode Load [a, b] = isRI a && isR b
-validOperandsForOpcode Load _ = False
-validOperandsForOpcode Loadw [a, b] = isRI a && isR b
-validOperandsForOpcode Loadw _ = False
-validOperandsForOpcode Jgz [a, b] = isR a && isRI b
-validOperandsForOpcode Jgz _ = False
-validOperandsForOpcode Jlt [a, b] = isR a && isRI b
-validOperandsForOpcode Jlt _ = False
-validOperandsForOpcode Jez [a, b] = isR a && isRI b
-validOperandsForOpcode Jez _ = False
-validOperandsForOpcode Int [] = True
-validOperandsForOpcode Int _ = False
-validOperandsForOpcode Hlt [] = True
-validOperandsForOpcode Hlt _ = False
+validOperandsForOpcode Add = validateArithOperands
+validOperandsForOpcode Sub = validateArithOperands
+validOperandsForOpcode Div = validateArithOperands
+validOperandsForOpcode Mul = validateArithOperands
+validOperandsForOpcode Xor = validateArithOperands
+validOperandsForOpcode Shf = validateArithOperands
+validOperandsForOpcode And = validateArithOperands
+validOperandsForOpcode Or = validateArithOperands
+validOperandsForOpcode Saveh = validateMemoryOperands
+validOperandsForOpcode Savehw = validateMemoryOperands
+validOperandsForOpcode Save = validateMemoryOperands
+validOperandsForOpcode Savew = validateMemoryOperands
+validOperandsForOpcode Loadh = validateMemoryOperands
+validOperandsForOpcode Loadhw = validateMemoryOperands
+validOperandsForOpcode Load = validateMemoryOperands
+validOperandsForOpcode Loadw = validateMemoryOperands
+validOperandsForOpcode Jgz = validateJumpOperands
+validOperandsForOpcode Jlt = validateJumpOperands
+validOperandsForOpcode Jez = validateJumpOperands
+validOperandsForOpcode Int = validateSpecialOperands
+validOperandsForOpcode Hlt = validateSpecialOperands
+
+validateArithOperands :: [Operand] -> Bool
+validateArithOperands [a, b, c] = isR a && isRI b && isR c
+validateArithOperands _ = False
+
+validateMemoryOperands :: [Operand] -> Bool
+validateMemoryOperands [a, b] = isRI a && isRI b
+validateMemoryOperands _ = False
+
+validateJumpOperands :: [Operand] -> Bool
+validateJumpOperands [a, b] = isR a && isRI b
+validateJumpOperands _ = False
+
+validateSpecialOperands :: [Operand] -> Bool
+validateSpecialOperands = null
 
 isR, isI, isRI :: Operand -> Bool
-isR Register {} = True
+
+isR (Register r) | r >= 0 && r <= 15 = True
 isR _ = False
-isI Immediate {} = True
+
+isI (Immediate i) | i >= 0 && i <= 65535 = True
 isI _ = False
+
 isRI o = isI o || isR o
