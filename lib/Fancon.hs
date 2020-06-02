@@ -3,9 +3,9 @@ module Fancon
   , assemble
   , link
   , emit
-  , printInstructions
   , printSymbolTable
   , Module
+  , module Fancon.Instruction
   ) where
 
 import Fancon.Instruction
