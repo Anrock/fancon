@@ -15,6 +15,7 @@ import qualified Data.List.NonEmpty as NE
 import qualified Fancon.Instruction as Ins
 import qualified Fancon.Parse as P
 import Fancon.Symboltable (SymbolTable, LineIx, SymbolName)
+import qualified Fancon.Symboltable.Validation as Sym
 import qualified Fancon.Symboltable as Sym
 
 type CommandText = Text

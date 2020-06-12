@@ -76,6 +76,7 @@ library
                , Fancon.Emit
                , Fancon.Parse
                , Fancon.Symboltable
+               , Fancon.Symboltable.Validation
                , Fancon.Link
 
 test-suite test

@@ -2,7 +2,7 @@
 module Fancon.Symboltable
   ( -- * Types and constructors
     Symbol(..)
-  , SymbolTable
+  , SymbolTable(..)
   , emptySymbolTable
 
   -- * Convenience type synonyms
@@ -12,18 +12,8 @@ module Fancon.Symboltable
   , SymbolReference
 
   -- * Queries
-  , exports
-  , imports
-  , local
-  , references
   , referencesToLocals
   , isDefined
-  -- ** Possible warnings
-  , importNameCollisions
-  , undefinedExports
-  , undefineds
-  , unusedImports
-  , unusedLocals
 
   -- * Modification
   , addConstant
@@ -73,12 +63,6 @@ emptySymbolTable = SymbolTable { local = M.empty
                                , references = M.empty
                                }
 
-localNameSet :: SymbolTable -> S.Set SymbolName
-localNameSet SymbolTable{ local } = S.fromDistinctAscList (M.keys local)
-
-referencesNameSet :: SymbolTable -> S.Set SymbolName
-referencesNameSet SymbolTable { references } = S.fromDistinctAscList (M.keys references)
-
 addReference :: SymbolName -> SymbolReference -> SymbolTable -> SymbolTable
 addReference sym ref symtab = symtab{references = references'}
   where references' = M.insertWith (<>) sym (Data.List.NonEmpty.fromList [ref]) (references symtab)
@@ -101,22 +85,6 @@ addConstant sym val s = s{local = local'}
 
 isDefined :: SymbolName -> SymbolTable -> Bool
 isDefined sym s = M.member sym (local s)
-
-unusedLocals :: SymbolTable -> S.Set SymbolName
-unusedLocals s = localNameSet s \\ referencesNameSet s \\ exports s
-
-unusedImports :: SymbolTable -> S.Set SymbolName
-unusedImports s@SymbolTable{ imports } = imports \\ referencesNameSet s
-
-undefineds :: SymbolTable -> M.Map SymbolName (NonEmpty SymbolReference)
-undefineds s = M.restrictKeys (references s) $
-  referencesNameSet s \\ localNameSet s \\ imports s
-
-undefinedExports :: SymbolTable -> S.Set SymbolName
-undefinedExports s@SymbolTable { exports } = exports \\ localNameSet s
-
-importNameCollisions :: SymbolTable -> S.Set SymbolName
-importNameCollisions s@SymbolTable { imports } = S.intersection (localNameSet s) imports
 
 offsetSymbolTable :: Int -> SymbolTable -> SymbolTable
 offsetSymbolTable ofs s = s{local = local', references = references'}
