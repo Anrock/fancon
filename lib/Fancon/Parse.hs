@@ -8,7 +8,7 @@ import qualified Text.Megaparsec.Char.Lexer as L
 import Data.Void (Void)
 import Control.Monad (void)
 import Data.Functor (($>))
-import Data.Array
+import qualified Data.Vector as V
 
 import Fancon.Memory (Word, Byte)
 
@@ -37,10 +37,10 @@ untilEOL = takeWhileP Nothing (/= '\n')
 identifier :: Parser Text
 identifier = lexeme $ pack <$> some (alphaNumChar <|> oneOf ("!@#$%^&*-_" :: String))
 
-parse :: Text -> Either (ParseErrorBundle Text Void) (Array Int AST)
+parse :: Text -> Either (ParseErrorBundle Text Void) (V.Vector AST)
 parse input = case parsedLines of
                 Left e -> Left e
-                Right ast -> Right $ listArray (1, length ast) ast
+                Right ast -> Right $ V.fromList ast
   where parsedLines = runParser assembly "" input
 
 assembly :: Parser [AST]

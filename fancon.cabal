@@ -54,7 +54,7 @@ common language
 
 common deps
   build-depends:   base >= 4.7 && < 5
-                 , array
+                 , vector
                  , containers
                  , megaparsec
                  , polysemy

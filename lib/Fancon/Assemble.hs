@@ -7,7 +7,7 @@ import Polysemy
 import Polysemy.State
 import Control.Monad (forM)
 import Text.Read (readMaybe)
-import Data.Array
+import qualified Data.Vector as V
 import qualified Data.Map as M
 import qualified Data.Set as S
 import qualified Data.List.NonEmpty as NE
@@ -19,7 +19,7 @@ import qualified Fancon.Symboltable.Validation as Sym
 import qualified Fancon.Symboltable as Sym
 
 type CommandText = Text
-type Module = (SymbolTable, Array Int Ins.Instruction)
+type Module = (SymbolTable, V.Vector Ins.Instruction)
 
 data Warning = UnknownCommand CommandText LineIx
              | UnreferencedSymbol SymbolName LineIx
@@ -48,7 +48,7 @@ initialAssemblerState = AssemblerState { errors = []
                                        , symbolTable = Sym.emptySymbolTable
                                        , locations = M.empty
                                        , lineNumber = 1
-                                       , significantLineNumber = 1}
+                                       , significantLineNumber = 0}
 
 assemble :: Traversable t => t P.AST -> Either [Error] ([Warning], Module)
 assemble = validateAssemblerState . semChain
@@ -62,7 +62,7 @@ validateAssemblerState AssemblerState{warnings, errors, symbolTable, instruction
     Right symWarns ->
       if not . null $ errors
       then Left errors
-      else Right (warnings <> symWarns, (symbolTable, listArray (1, length instructions) instructions))
+      else Right (warnings <> symWarns, (symbolTable, V.fromList instructions))
 
 validateSymtab :: M.Map SymbolName LineIx -> SymbolTable -> Either [Error] [Warning]
 validateSymtab locs s = if not . null $ errors
@@ -71,7 +71,7 @@ validateSymtab locs s = if not . null $ errors
   where importCollisions = toDuplicate <$> (S.toList . Sym.importNameCollisions $ s)
         undefinedExports = toUndefined <$> (S.toList . Sym.undefinedExports $ s)
         undefineds = concat . M.elems . M.mapWithKey
-                            (\sym refs -> NE.toList $ UndefinedSymbolReference sym <$> NE.map fst refs)
+                            (\sym refs -> NE.toList $ UndefinedSymbolReference sym <$> NE.map ((+1) . fst)  refs)
                               $ Sym.undefineds s
         unusedLocals =  toUnreferenced <$> (S.toList . Sym.unusedLocals $ s)
         unusedImports = toUnreferenced <$> (S.toList . Sym.unusedImports $ s)
@@ -84,7 +84,7 @@ validateSymtab locs s = if not . null $ errors
         warnings = unusedLocals <> unusedImports
 
 emitErrorAtCurrentLine :: Member (State AssemblerState) r => (LineIx -> Error) -> Sem r ()
-emitErrorAtCurrentLine e = do line <- gets significantLineNumber
+emitErrorAtCurrentLine e = do line <- gets lineNumber
                               let err = e line
                               emitError err
 

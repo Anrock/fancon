@@ -12,9 +12,9 @@ module Fancon.Instruction
 
 import Fancon.Instruction.Internal
 import Fancon.Instruction.Validate
-import Data.Array
+import qualified Data.Vector as V
 import Data.String.Interpolate
 import Data.List (intercalate)
 
-printInstructions :: Array Int Instruction -> String
-printInstructions instructions = [i|#{length instructions} instructions:\n#{intercalate "\n" $ show <$> assocs instructions}|]
+printInstructions :: V.Vector Instruction -> String
+printInstructions instructions = [i|#{V.length instructions} instructions:\n#{intercalate "\n" $ show <$> V.toList instructions}|]

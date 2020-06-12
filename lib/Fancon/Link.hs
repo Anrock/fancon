@@ -7,7 +7,7 @@ import Fancon.Instruction
 import qualified Data.Map as M
 import Data.Map ((\\))
 import qualified Data.List.NonEmpty as NE
-import Data.Array
+import qualified Data.Vector as V
 
 data Error = Undefined Text
            | DuplicateDefinition Text
@@ -15,7 +15,7 @@ data Error = Undefined Text
            deriving (Eq, Show)
 
 link :: Traversable t => t Module -> Module
-link = foldr merge (emptySymbolTable, array (1, 0) [])
+link = foldr merge (emptySymbolTable, V.empty)
 
 merge :: Module -> Module -> Module
 merge (aSymtab, aInstructions) (bSymtab, bInstructions) = (cSymtab, cInstructions)
@@ -24,7 +24,7 @@ merge (aSymtab, aInstructions) (bSymtab, bInstructions) = (cSymtab, cInstruction
                                   , references = M.unionWith (<>) (references aResolvedSymtab) (references bResolvedSymtab)
                                   , local = M.union (local aResolvedSymtab) (local bResolvedSymtab)
                                   }
-        cInstructions = listArray (1, length aResolvedInstructions + length bResolvedInstructions) $ elems aResolvedInstructions ++ elems bResolvedInstructions
+        cInstructions = aResolvedInstructions V.++ bResolvedInstructions
         (aResolvedSymtab, aResolvedInstructions) = resolveLocals (aSymtab `resolveImportsFrom` offsetSymbolTable (length aInstructions) bSymtab, aInstructions)
         (bResolvedSymtab, bResolvedInstructions) = resolveLocals (bSymtab `resolveImportsFrom` aResolvedSymtab, bInstructions)
 
@@ -38,7 +38,7 @@ resolveLocals (symtab, instructions) = (symtab', instructions')
         lookupSymbol name = value $ local symtab M.! name
         resolveSymbol name refs ins =
           -- TODO: Ugly AF
-          ins // map (\(lineIx, opIx) -> (lineIx, resolveReference (ins ! lineIx) opIx (lookupSymbol name))) (NE.toList refs)
+          ins V.// map (\(lineIx, opIx) -> (lineIx, resolveReference (ins V.! lineIx) opIx (lookupSymbol name))) (NE.toList refs)
 
 resolveReference :: Instruction -> OpIx -> Int -> Instruction
 resolveReference i opIx v = i{operands = operands'}

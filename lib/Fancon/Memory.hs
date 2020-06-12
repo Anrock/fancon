@@ -27,7 +27,7 @@ module Fancon.Memory (
 ) where
 
 import Prelude hiding (Word)
-import Data.Array
+import qualified Data.Vector.Unboxed as V
 import Data.Word (Word16, Word8)
 
 hardwareStateAddress, inputAddress, interruptState, interruptHandlerAddress, ramAddress :: Address
@@ -37,7 +37,7 @@ interruptState = 2
 interruptHandlerAddress = 3
 ramAddress = 4
 
-type Bank = Array Address Byte
+type Bank = V.Vector Byte
 type Cartridge = Bank
 type RAM = Bank
 
@@ -52,7 +52,7 @@ emptyCartridge :: Cartridge
 emptyCartridge = emptyBank
 
 emptyBank :: Bank
-emptyBank = array (0, maxBound :: Address) [(i, 0) | i <- [0..maxBound :: Address]]
+emptyBank = V.replicate (fromIntegral (maxBound :: Address)) 0
 
 emptyMemory :: Memory
 emptyMemory = Memory {
@@ -85,7 +85,7 @@ data RegisterFile = RegisterFile {
 }
 
 readByte :: RAM -> Address -> Byte
-readByte ram addr = ram ! addr
+readByte ram addr = ram V.! (fromIntegral addr)
 
 writeByte :: RAM -> Address -> Byte -> RAM
-writeByte ram addr val = ram // [(addr, val)]
+writeByte ram addr val = ram V.// [(fromIntegral addr, val)]
