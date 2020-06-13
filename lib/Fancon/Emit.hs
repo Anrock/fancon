@@ -1,13 +1,12 @@
 module Fancon.Emit (emit) where
 
-import Prelude hiding (Word)
 import qualified Data.ByteString.Lazy as B
 import qualified Data.ByteString.Builder as B
 import Data.List (sortBy)
 import Data.Bits (shiftL, (.|.), zeroBits)
+import Data.Word (Word8)
 
 import Fancon.Instruction.Internal
-import Fancon.Memory
 
 emit :: Foldable f => f Instruction -> B.ByteString
 emit = B.toLazyByteString . foldMap emitInstruction
@@ -19,7 +18,7 @@ emitInstruction ins@Instruction{operands} =
 emitDescriptionByte :: Instruction -> B.Builder
 emitDescriptionByte i = B.word8 $ zeroBits .|. typeBits (opcode i) .|. typeSpecificBits i
 
-typeBits :: Opcode -> Byte
+typeBits :: Opcode -> Word8
 typeBits opcode =
   let aType = 0b00000000
       mType = 0b01000000
@@ -52,17 +51,17 @@ isImmediate :: Operand -> Bool
 isImmediate Immediate {} = True
 isImmediate _ = False
 
-aImmediateBit :: [Operand] -> Byte
+aImmediateBit :: [Operand] -> Word8
 aImmediateBit operands
   | isImmediate (operands !! 0) = 0b00000010
   | otherwise = 0b0
 
-bImmediateBit :: [Operand] -> Byte
+bImmediateBit :: [Operand] -> Word8
 bImmediateBit operands
   | isImmediate (operands !! 1) = 0b00000001
   | otherwise = 0b0
 
-typeSpecificBits :: Instruction -> Byte
+typeSpecificBits :: Instruction -> Word8
 typeSpecificBits (Instruction opcode operands) =
   let aImmediate = aImmediateBit operands
       bImmediate = bImmediateBit operands
@@ -100,5 +99,5 @@ emitOperands (Register a:rest) = B.word8 a <> emitOperands rest
 emitOperands (Immediate a:rest) = B.word16BE a <> emitOperands rest
 emitOperands [] = mempty
 
-packNibbles :: Byte -> Byte -> B.Builder
+packNibbles :: Word8 -> Word8 -> B.Builder
 packNibbles a b = B.word8 $ shiftL a 4 .|. b

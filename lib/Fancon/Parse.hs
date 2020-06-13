@@ -1,6 +1,6 @@
 module Fancon.Parse (parse, AST(..), Operand(..)) where
 
-import Prelude hiding (Word, div, or, and)
+import Prelude hiding (div, or, and)
 import Data.Text (Text, pack)
 import Text.Megaparsec hiding (parse, label, Label)
 import Text.Megaparsec.Char
@@ -9,12 +9,11 @@ import Data.Void (Void)
 import Control.Monad (void)
 import Data.Functor (($>))
 import qualified Data.Vector as V
-
-import Fancon.Memory (Word, Byte)
+import Data.Word (Word8, Word16)
 
 type Parser = Parsec Void Text
 
-data Operand = Register Byte | Immediate Word | Label Text deriving (Eq, Show)
+data Operand = Register Word8 | Immediate Word16 | Label Text deriving (Eq, Show)
 data AST = Command Text
          | Instruction Text [Operand]
          deriving (Show, Eq)
