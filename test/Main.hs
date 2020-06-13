@@ -56,11 +56,9 @@ unit_AssemblerErrors = testGroup "Errors"
         @?= [InvalidWord "67000" 1]
   --}
 
-  {--
   , testCase "errors on register index out of bounds" $ do
       errors "add r17 0 r0"
-        @?= [InvalidOperands [Register 17] 1]
-  --}
+        @?= [InvalidOperands [Register 17, Immediate 0, Register 0] 1]
 
   , testCase "errors on invalid opcode" $ do
       errors "poo r0 r0 r0"
