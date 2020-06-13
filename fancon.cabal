@@ -17,6 +17,7 @@ common warnings
                -Wno-safe
                -Wno-missing-local-signatures
                -Wno-monomorphism-restriction
+               -Wno-missing-deriving-strategies
 
 common ghc-options
   ghc-options: -O2
