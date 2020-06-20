@@ -4,9 +4,9 @@ import qualified Data.ByteString.Lazy as B
 import qualified Data.ByteString.Builder as B
 import Data.List (sortBy)
 import Data.Bits (shiftL, (.|.), zeroBits)
-import Data.Word (Word8)
 
 import Fancon.Instruction.Internal
+import Fancon.Memory
 
 emit :: Foldable f => f Instruction -> B.ByteString
 emit = B.toLazyByteString . foldMap emitInstruction

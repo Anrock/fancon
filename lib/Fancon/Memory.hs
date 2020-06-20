@@ -5,6 +5,8 @@ module Fancon.Memory
   , firstByte
   , secondByte
   , byteToNibbles
+  , Word8
+  , Word16
   ) where
 
 import Prelude hiding (Word)
