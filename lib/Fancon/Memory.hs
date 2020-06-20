@@ -7,11 +7,13 @@ module Fancon.Memory
   , byteToNibbles
   , Word8
   , Word16
+  , (.>.)
+  , (.<.)
   ) where
 
 import Prelude hiding (Word)
 import Data.Word (Word16, Word8)
-import Data.Bits (shiftL, shiftR, (.&.))
+import Data.Bits (shiftL, shiftR, (.&.), Bits)
 
 type Address = Word16
 
@@ -29,3 +31,12 @@ secondByte = snd . wordToBytes
 
 byteToNibbles :: Word8 -> (Word8, Word8)
 byteToNibbles b = (shiftR (0b11110000 .&. b) 4, 0b00001111 .&. b)
+
+infixl 7 .>.
+(.>.) :: Bits a => a -> Int -> a
+(.>.) = shiftR
+
+infixl 7 .<.
+(.<.) :: Bits a => a -> Int -> a
+(.<.) = shiftL
+
