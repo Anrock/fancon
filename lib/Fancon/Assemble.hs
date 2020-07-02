@@ -34,7 +34,7 @@ data Error = DuplicateSymbolDefinition SymbolName LineIx
 
 data AssemblerState = AssemblerState { errors :: [Error]
                                      , warnings :: [Warning]
-                                     , instructions :: [Ins.Instruction]
+                                     , instructions :: V.Vector Ins.Instruction
                                      , symbolTable :: SymbolTable
                                      , locations :: M.Map SymbolName LineIx
                                      , lineNumber :: Int
@@ -62,7 +62,7 @@ validateAssemblerState AssemblerState{warnings, errors, symbolTable, instruction
     Right symWarns ->
       if not . null $ errors
       then Left errors
-      else Right (warnings <> symWarns, (symbolTable, V.fromList instructions))
+      else Right (warnings <> symWarns, (symbolTable, instructions))
 
 validateSymtab :: M.Map SymbolName LineIx -> SymbolTable -> Either [Error] [Warning]
 validateSymtab locs s = if not . null $ errors
@@ -95,7 +95,7 @@ emitWarning :: Member (State AssemblerState) r => Warning -> Sem r ()
 emitWarning w = modify (\s@AssemblerState{warnings} -> s{warnings = w:warnings})
 
 emitInstruction :: Member (State AssemblerState) r => Ins.Instruction -> Sem r ()
-emitInstruction i = modify (\s@AssemblerState{instructions} -> s{instructions = instructions ++ [i]})
+emitInstruction i = modify (\s@AssemblerState{instructions} -> s{instructions = V.snoc instructions i})
 
 bumpLineNumber :: Member (State AssemblerState) r => Sem r ()
 bumpLineNumber = modify (\s@AssemblerState{lineNumber} -> s{lineNumber = succ lineNumber})
