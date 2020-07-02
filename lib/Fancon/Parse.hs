@@ -7,7 +7,6 @@ import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
 import Data.Void (Void)
 import Control.Monad (void)
-import Data.Functor (($>))
 import qualified Data.Vector as V
 import Data.Word (Word8, Word16)
 
@@ -58,15 +57,9 @@ operand :: Parser Operand
 operand = register <|> immediate <|> label
 
 register :: Parser Operand
-register = generalRegister <|> spRegister
-
-generalRegister :: Parser Operand
-generalRegister = lexeme $ do
+register = lexeme $ do
   registerPrefix
   Register <$> L.decimal <?> "register number"
-
-spRegister :: Parser Operand
-spRegister = lexeme $ void (symbol "sp" <?> "stack pointer register") $> Register 255
 
 registerPrefix :: Parser ()
 registerPrefix = void (symbol "r" <?> "register prefix")
