@@ -13,8 +13,8 @@ import Data.Word (Word8, Word16)
 type Parser = Parsec Void Text
 
 data Operand = Register Word8 | Immediate Word16 | Label Text deriving (Eq, Show)
-data AST = Command Text
-         | Instruction Text [Operand]
+data AST = Command Text Int
+         | Instruction Text [Operand] Int
          deriving (Show, Eq)
 
 -- * Helper parsers
@@ -45,13 +45,11 @@ assembly :: Parser [AST]
 assembly = whiteSpaceConsumer >> some (command <|> instruction)
 
 command :: Parser AST
-command = lineLexeme $ char '.' >> Command <$> untilEOL
+command = lineLexeme $ char '.' >> Command <$> untilEOL <*> (unPos <$> sourceLine <$> getSourcePos)
 
 instruction :: Parser AST
 instruction = lineLexeme $ do
-  op <- identifier
-  operands <- many operand
-  pure $ Instruction op operands
+  Instruction <$> identifier <*> many operand <*> (unPos <$> sourceLine <$> getSourcePos)
 
 operand :: Parser Operand
 operand = register <|> immediate <|> label
