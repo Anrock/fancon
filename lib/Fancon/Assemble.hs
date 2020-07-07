@@ -12,14 +12,14 @@ import qualified Data.Map as M
 import qualified Data.Set as S
 import qualified Data.List.NonEmpty as NE
 
-import qualified Fancon.Instruction as Ins
-import qualified Fancon.Parse as P
+import Fancon.Instruction
+import Fancon.Parse
 import Fancon.Symboltable (SymbolTable, LineIx, SymbolName)
 import qualified Fancon.Symboltable.Validation as Sym
 import qualified Fancon.Symboltable as Sym
 
 type CommandText = Text
-type Module = (SymbolTable, V.Vector Ins.Instruction)
+type Module = (SymbolTable, V.Vector Instruction)
 
 data Warning = UnknownCommand CommandText LineIx
              | UnreferencedSymbol SymbolName LineIx
@@ -29,12 +29,12 @@ data Error = DuplicateSymbolDefinition SymbolName LineIx
            | UndefinedSymbolReference SymbolName LineIx
            | InvalidWord Text LineIx
            | InvalidOpcode Text LineIx
-           | InvalidOperands [Ins.Operand] LineIx
+           | InvalidOperands [Operand] LineIx
   deriving (Show, Eq)
 
 data AssemblerState = AssemblerState { errors :: [Error]
                                      , warnings :: [Warning]
-                                     , instructions :: V.Vector Ins.Instruction
+                                     , instructions :: V.Vector Instruction
                                      , symbolTable :: SymbolTable
                                      , locations :: M.Map SymbolName LineIx
                                      , significantLineNumber :: Int
@@ -48,9 +48,9 @@ initialAssemblerState = AssemblerState { errors = []
                                        , locations = M.empty
                                        , significantLineNumber = 0}
 
-assemble :: Traversable t => t P.AST -> Either [Error] ([Warning], Module)
+assemble :: Traversable t => t AST -> Either [Error] ([Warning], Module)
 assemble = validateAssemblerState . semChain
-  where semChain :: Traversable t => t P.AST -> AssemblerState
+  where semChain :: Traversable t => t AST -> AssemblerState
         semChain = fst . run . runState initialAssemblerState . runAssembler
 
 validateAssemblerState :: AssemblerState -> Either [Error] ([Warning], Module)
@@ -87,32 +87,32 @@ emitError e = modify (\s@AssemblerState{errors} -> s{errors = e:errors})
 emitWarning :: Member (State AssemblerState) r => Warning -> Sem r ()
 emitWarning w = modify (\s@AssemblerState{warnings} -> s{warnings = w:warnings})
 
-emitInstruction :: Member (State AssemblerState) r => Ins.Instruction -> Sem r ()
+emitInstruction :: Member (State AssemblerState) r => Instruction -> Sem r ()
 emitInstruction i = modify (\s@AssemblerState{instructions} -> s{instructions = V.snoc instructions i})
 
 bumpSignificantLineNumber :: Member (State AssemblerState) r => Sem r ()
 bumpSignificantLineNumber = modify (\s@AssemblerState{significantLineNumber} -> s{significantLineNumber = succ significantLineNumber})
 
-runAssembler :: Traversable t => t P.AST -> Sem '[State AssemblerState] ()
+runAssembler :: Traversable t => t AST -> Sem '[State AssemblerState] ()
 runAssembler = mapM_ assembleLine
-  where assembleLine :: P.AST -> Sem '[State AssemblerState] ()
+  where assembleLine :: AST -> Sem '[State AssemblerState] ()
         assembleLine = \case
-          (P.Instruction opcode operands pos) -> instruction opcode operands pos >> bumpSignificantLineNumber
-          (P.Command txt pos) -> command txt pos
+          (Instruction opcode operands pos) -> instruction opcode operands pos >> bumpSignificantLineNumber
+          (Command txt pos) -> command txt pos
 
-instruction :: Text -> [P.Operand] -> Int -> Sem '[State AssemblerState] ()
+instruction :: Text -> [ASTOperand] -> Int -> Sem '[State AssemblerState] ()
 instruction opcodeStr operands line =
-  case Ins.validateOpcode opcodeStr of
+  case validateOpcode opcodeStr of
     Nothing -> emitError $ InvalidOpcode opcodeStr line
     Just opcode -> do
       operands' <- forM (zip [0..] operands) $ \case
-        (_, P.Register r)  -> pure $ Ins.Register r
-        (_, P.Immediate i) -> pure $ Ins.Immediate i
-        (opIx, P.Label l)  -> do (symtab, lineIx) <- (,) <$> gets symbolTable <*> gets significantLineNumber
-                                 let symtab' = Sym.addReference l (lineIx, opIx) symtab
-                                 modify (\s -> s{symbolTable = symtab'})
-                                 pure $ Ins.Immediate 0
-      case Ins.validateInstruction opcode operands' of
+        (_, Right (Register r))  -> pure $ Register r
+        (_, Right (Immediate i)) -> pure $ Immediate i
+        (opIx, Left l)  -> do (symtab, lineIx) <- (,) <$> gets symbolTable <*> gets significantLineNumber
+                              let symtab' = Sym.addReference l (lineIx, opIx) symtab
+                              modify (\s -> s{symbolTable = symtab'})
+                              pure $ Immediate 0
+      case validateInstruction opcode operands' of
         Just ins -> emitInstruction ins
         Nothing -> emitError $ InvalidOperands operands' line
 

@@ -7,7 +7,6 @@ module Fancon.Instruction.Internal
   ) where
 
 import Prelude hiding (div, and, or)
-import Data.Word (Word8, Word16)
 
 data Opcode = Add
             | Sub
@@ -32,7 +31,7 @@ data Opcode = Add
             | Hlt
             deriving (Eq, Show, Bounded, Enum, Read)
 
-data Operand = Register Word8 | Immediate Word16 deriving (Eq, Show)
+data Operand = Register Int | Immediate Int deriving (Eq, Show)
 
 data Instruction = Instruction { opcode :: Opcode
                                , operands :: [Operand]

@@ -1,4 +1,4 @@
-module Fancon.Parse (parse, AST(..), Operand(..)) where
+module Fancon.Parse (parse, AST(..), ASTOperand) where
 
 import Prelude hiding (div, or, and)
 import Data.Text (Text, pack)
@@ -8,13 +8,14 @@ import qualified Text.Megaparsec.Char.Lexer as L
 import Data.Void (Void)
 import Control.Monad (void)
 import qualified Data.Vector as V
-import Data.Word (Word8, Word16)
 
+import Fancon.Instruction (Operand(..))
 type Parser = Parsec Void Text
 
-data Operand = Register Word8 | Immediate Word16 | Label Text deriving (Eq, Show)
+type ASTOperand = Either Text Operand
+
 data AST = Command Text Int
-         | Instruction Text [Operand] Int
+         | Instruction Text [ASTOperand] Int
          deriving (Show, Eq)
 
 -- * Helper parsers
@@ -51,19 +52,19 @@ instruction :: Parser AST
 instruction = lineLexeme $ do
   Instruction <$> identifier <*> many operand <*> (unPos <$> sourceLine <$> getSourcePos)
 
-operand :: Parser Operand
+operand :: Parser ASTOperand
 operand = register <|> immediate <|> label
 
-register :: Parser Operand
+register :: Parser ASTOperand
 register = lexeme $ do
   registerPrefix
-  Register <$> L.decimal <?> "register number"
+  Right . Register <$> L.decimal <?> "register number"
 
 registerPrefix :: Parser ()
 registerPrefix = void (symbol "r" <?> "register prefix")
 
-immediate :: Parser Operand
-immediate = lexeme $ Immediate <$> (L.decimal <?> "immediate value")
+immediate :: Parser ASTOperand
+immediate = lexeme $ Right . Immediate <$> (L.decimal <?> "immediate value")
 
-label :: Parser Operand
-label = Label <$> identifier <?> "label"
+label :: Parser ASTOperand
+label = Left <$> identifier <?> "label"

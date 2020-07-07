@@ -94,9 +94,9 @@ packingOrder _ (Register _) = GT
 packingOrder (Immediate _) _ = GT
 
 emitOperands :: [Operand] -> B.Builder
-emitOperands (Register a:Register b:rest) = packNibbles a b <> emitOperands rest
-emitOperands (Register a:rest) = B.word8 a <> emitOperands rest
-emitOperands (Immediate a:rest) = B.word16BE a <> emitOperands rest
+emitOperands (Register a:Register b:rest) = packNibbles (fromIntegral a) (fromIntegral b) <> emitOperands rest
+emitOperands (Register a:rest) = B.word8 (fromIntegral a) <> emitOperands rest
+emitOperands (Immediate a:rest) = B.word16BE (fromIntegral a) <> emitOperands rest
 emitOperands [] = mempty
 
 packNibbles :: Word8 -> Word8 -> B.Builder
