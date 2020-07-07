@@ -2,7 +2,7 @@ module Arguments (CompileOptions(..), Command(..), getArguments) where
 
 import Options.Applicative
 
-data Command = Compile CompileOptions
+newtype Command = Compile CompileOptions
 
 data CompileOptions = CompileOptions
   { files :: [FilePath],

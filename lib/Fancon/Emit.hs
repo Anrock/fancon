@@ -53,7 +53,7 @@ isImmediate _ = False
 
 aImmediateBit :: [Operand] -> Word8
 aImmediateBit operands
-  | isImmediate (operands !! 0) = 0b00000010
+  | isImmediate (head operands) = 0b00000010
   | otherwise = 0b0
 
 bImmediateBit :: [Operand] -> Word8

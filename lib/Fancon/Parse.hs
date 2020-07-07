@@ -46,11 +46,11 @@ assembly :: Parser [AST]
 assembly = whiteSpaceConsumer >> some (command <|> instruction)
 
 command :: Parser AST
-command = lineLexeme $ char '.' >> Command <$> untilEOL <*> (unPos <$> sourceLine <$> getSourcePos)
+command = lineLexeme $ char '.' >> Command <$> untilEOL <*> (unPos . sourceLine <$> getSourcePos)
 
 instruction :: Parser AST
 instruction = lineLexeme $ do
-  Instruction <$> identifier <*> many operand <*> (unPos <$> sourceLine <$> getSourcePos)
+  Instruction <$> identifier <*> many operand <*> (unPos . sourceLine <$> getSourcePos)
 
 operand :: Parser ASTOperand
 operand = register <|> immediate <|> label
