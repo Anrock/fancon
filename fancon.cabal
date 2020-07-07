@@ -67,6 +67,7 @@ library
   hs-source-dirs:   lib
   exposed-modules: Fancon
                  , Fancon.Assemble
+                 , Fancon.AssembleAlt
                  , Fancon.Link
                  , Fancon.Bus
   other-modules: Fancon.Memory

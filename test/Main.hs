@@ -5,9 +5,10 @@ module Main (main) where
 import Test.Tasty
 import Test.Tasty.HUnit
 
-import Fancon
+import Fancon hiding (assemble, Module)
 import Fancon.Assemble hiding (Error, Warning)
 import Fancon.Assemble qualified as Asm
+import Fancon.AssembleAlt hiding (Error, Warning)
 
 import Fancon.Link hiding (Error, Warning)
 
@@ -74,7 +75,7 @@ unit_AssemblerErrors = testGroup "Errors"
 
   , testCase "errors on register index out of bounds" $ do
       errors "add r17 0 r0"
-        @?= [InvalidOperands [Register 17, Immediate 0, Register 0] 1]
+        @?= [InvalidOperands (Right <$> [Register 17, Immediate 0, Register 0]) 1]
 
   , testCase "errors on invalid opcode" $ do
       errors "poo r0 r0 r0"
@@ -82,7 +83,7 @@ unit_AssemblerErrors = testGroup "Errors"
 
   , testCase "errors on invalid operands" $ do
       errors "add r0 r0 42"
-        @?= [InvalidOperands [Register 0, Register 0, Immediate 42] 1]
+        @?= [InvalidOperands (Right <$> [Register 0, Register 0, Immediate 42]) 1]
 
   , testCase "errors on import name collision" $ do
       errors ".import foo\n.label foo"
