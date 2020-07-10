@@ -1,4 +1,4 @@
-module Fancon.Link (link) where
+module Fancon.Link (link, Error(..), Warning(..)) where
 
 import Data.Text (Text)
 import Fancon.Assemble (Module)
@@ -11,11 +11,21 @@ import qualified Data.Vector as V
 
 data Error = Undefined Text
            | DuplicateDefinition Text
-           | RelocationPropertyMismatch Text
            deriving (Eq, Show)
 
-link :: Traversable t => t Module -> Module
-link = foldr merge (emptySymbolTable, V.empty)
+data Warning = Unused Text
+             | NoMain
+             deriving (Eq, Show)
+
+link :: Traversable t => t Module -> Either [Error] ([Warning], Module)
+link ms = validate linked
+  where linked = foldr merge (emptySymbolTable, V.empty) ms
+
+validate :: Module -> Either [Error] ([Warning], Module)
+validate m@(symtab, _) = if null errors then Right (warnings, m) else Left errors
+  where warnings = (if isDefined "main" symtab then [] else [NoMain]) <> unuseds
+        errors = []
+        unuseds = 
 
 merge :: Module -> Module -> Module
 merge (aSymtab, aInstructions) (bSymtab, bInstructions) = (cSymtab, cInstructions)

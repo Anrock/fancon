@@ -1,10 +1,17 @@
+{-# LANGUAGE NoOverloadedLists #-}
+{-# OPTIONS_GHC -Wno-incomplete-patterns #-}
+
 module Main (main) where
 
 import Test.Tasty
 import Test.Tasty.HUnit
 
 import Fancon
-import Fancon.Assemble
+import Fancon.Assemble hiding (Error, Warning)
+import qualified Fancon.Assemble as Asm
+
+import Fancon.Link hiding (Error, Warning)
+
 import Data.Text (Text)
 import qualified Data.ByteString.Lazy as B
 
@@ -15,7 +22,10 @@ tests :: TestTree
 tests = testGroup "Tests" [unitTests]
 
 unitTests :: TestTree
-unitTests = testGroup "Unit tests" [unit_InstructionsBinary, unit_Assembler]
+unitTests = testGroup "Unit tests" [ unit_InstructionsBinary
+                                   , unit_Assembler
+                                   , unit_Linker
+                                   ]
 
 unit_InstructionsBinary :: TestTree
 unit_InstructionsBinary = testGroup "Instructions binary"
@@ -84,7 +94,45 @@ unit_AssemblerErrors = testGroup "Errors"
         @?= [UndefinedSymbolReference "foo" 1]
   ] where errors t = let Left e = assembleTest t in e
 
-assembleTest :: Text -> Either [Error] ([Warning], Module)
+unit_Linker :: TestTree
+unit_Linker = testGroup "Linker" [ unit_LinkerWarnings, unit_LinkerErrors]
+
+unit_LinkerWarnings :: TestTree
+unit_LinkerWarnings = testGroup "Warnings"
+  [ testCase "warns when there is no main symbol" $ do
+      let m1 = "add r0 r0 r0"
+          m2 = "add r0 r0 r0"
+        in warnings [m1, m2] @?= [NoMain]
+
+  , testCase "warns when there is unused symbol" $ do
+      let m1 = ".export foo\n.label foo\nadd r0 r0 r0"
+          m2 = ".export main\n.label main\nadd r0 r0 r0"
+        in warnings [m1, m2] @?= [Unused "foo"]
+  ] where warnings ms = let Right (ws, _) = link $ assembleModule <$> ms in ws
+
+unit_LinkerErrors :: TestTree
+unit_LinkerErrors = testGroup "Errors"
+  [ testCase "errors when there is undefined symbol" $ do
+      let m1 = ".import foo\nadd r0 foo r0"
+          m2 = "add r0 r0 r0"
+        in errors [m1, m2] @?= [Undefined "foo"]
+
+  , testCase "errors when more than one symbol with same name" $ do
+      let m1 = ".export foo\n.label foo\nadd r0 r0 r0"
+          m2 = ".export foo\n.label foo\nadd r0 r0 r0"
+        in errors [m1, m2] @?= [DuplicateDefinition "foo"]
+
+  , testCase "errors when more than one symbol with same name" $ do
+      let m1 = ".export foo\n.label foo\nadd r0 r0 r0"
+          m2 = ".export foo\n.label foo\nadd r0 r0 r0"
+        in errors [m1, m2] @?= [DuplicateDefinition "foo"]
+  ] where errors ms = let Left es = link $ assembleModule <$> ms in es
+
+assembleModule :: Text -> Module
+assembleModule t = m
+  where Right (_, m) = assembleTest t
+
+assembleTest :: Text -> Either [Asm.Error] ([Asm.Warning], Module)
 assembleTest ins = assembled
   where (Right parsed) = parse ins
         assembled = assemble parsed
