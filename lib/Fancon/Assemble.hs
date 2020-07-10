@@ -143,5 +143,9 @@ defineFirstOrError name line f =
   do symtab <- gets symbolTable
      if Sym.isDefined name symtab
      then emitError $ DuplicateSymbolDefinition name line
-     else do locations <- gets locations
-             modify (\s -> s{symbolTable = f symtab, locations = M.insert name line locations})
+     else do modify (\s -> s{symbolTable = f symtab})
+             mentionSymbol name line
+
+mentionSymbol :: SymbolName -> Int -> Sem '[State AssemblerState] ()
+mentionSymbol name line =
+  modify (\s@AssemblerState{locations} -> s{locations = M.insert name line locations})
