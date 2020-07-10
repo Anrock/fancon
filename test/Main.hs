@@ -71,6 +71,10 @@ unit_AssemblerErrors = testGroup "Errors"
       errors "add r0 r0 42"
         @?= [InvalidOperands [Register 0, Register 0, Immediate 42] 1]
 
+  , testCase "errors on import name collision" $ do
+      errors ".import foo\n.label foo"
+        @?= [DuplicateSymbolDefinition "foo" 2]
+
   , testCase "errors on undefined export" $ do
       errors ".export foo\nadd r0 r0 r0"
         @?= [UndefinedSymbolReference "foo" 1]

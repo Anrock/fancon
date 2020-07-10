@@ -76,7 +76,7 @@ validateSymtab locs s = if not . null $ errors
 
         toUndefined sym = UndefinedSymbolReference sym (locs M.! sym)
         toUnreferenced sym = UnreferencedSymbol sym (locs M.! sym)
-        toDuplicate sym = DuplicateSymbolDefinition sym (Sym.value $ Sym.local s M.! sym)
+        toDuplicate sym = DuplicateSymbolDefinition sym (locs M.! sym)
 
         errors = undefinedExports <> undefineds <> importCollisions
         warnings = unusedLocals <> unusedImports
