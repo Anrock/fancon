@@ -38,6 +38,9 @@ unit_AssemblerWarnings = testGroup "Warnings"
   , testCase "warns about unreferenced symbols" $ do
       warnings ".label unused\nadd r0 r0 r0"
         @?= [UnreferencedSymbol "unused" 1]
+  , testCase "warns about unused imports" $ do
+      warnings ".import unused\nadd r0 r0 r0"
+        @?= [UnreferencedSymbol "unused" 1]
   ] where warnings t = let Right (w, _) = assembleTest t in w
 
 unit_AssemblerErrors :: TestTree
@@ -67,6 +70,10 @@ unit_AssemblerErrors = testGroup "Errors"
   , testCase "errors on invalid operands" $ do
       errors "add r0 r0 42"
         @?= [InvalidOperands [Register 0, Register 0, Immediate 42] 1]
+
+  , testCase "errors on undefined export" $ do
+      errors ".export foo\nadd r0 r0 r0"
+        @?= [UndefinedSymbolReference "foo" 1]
 
   , testCase "errors on undefined reference" $ do
       errors "add r0 foo r0"
