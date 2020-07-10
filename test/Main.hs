@@ -67,6 +67,10 @@ unit_AssemblerErrors = testGroup "Errors"
   , testCase "errors on invalid operands" $ do
       errors "add r0 r0 42"
         @?= [InvalidOperands [Register 0, Register 0, Immediate 42] 1]
+
+  , testCase "errors on undefined reference" $ do
+      errors "add r0 foo r0"
+        @?= [UndefinedSymbolReference "foo" 1]
   ] where errors t = let Left e = assembleTest t in e
 
 assembleTest :: Text -> Either [Error] ([Warning], Module)
