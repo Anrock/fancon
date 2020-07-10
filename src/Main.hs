@@ -44,7 +44,7 @@ main = getArguments >>= \case
 
 printWithLineMention :: Text -> Int -> Text -> IO ()
 printWithLineMention file lineIx text =
-    putStrLn [i|\n#{T.lines file !! lineIx}: #{text}|] -- TODO: Show lineIx
+    putStrLn [i|\n#{lineIx}: #{T.lines file !! pred lineIx}\n\t#{text}|]
 
 prettyPrintWarnings :: Text -> [Warning] -> IO ()
 prettyPrintWarnings file warnings = forM_ warnings \case
