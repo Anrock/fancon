@@ -122,10 +122,10 @@ command txt line
   | otherwise =
       case T.words txt of
         ["label", l] -> label l line
-        ["export", l] -> do symtab' <- Sym.addExport l <$> gets symbolTable
-                            modify (\s -> s{symbolTable = symtab'})
-        ["import", l] -> do symtab' <- Sym.addImport l <$> gets symbolTable
-                            modify (\s -> s{symbolTable = symtab'})
+        ["export", l] -> modify
+          (\s@AssemblerState{symbolTable} -> s{symbolTable = Sym.addExport l symbolTable})
+        ["import", l] -> modify
+          (\s@AssemblerState{symbolTable} -> s{symbolTable = Sym.addImport l symbolTable})
         ["const", l, sval] -> const l sval line
         _ -> emitWarning $ UnknownCommand txt line
 
