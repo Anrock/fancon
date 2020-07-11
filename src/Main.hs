@@ -37,13 +37,16 @@ main = getArguments >>= \case
                  putStrLn "done!"
                  pure m
     putStr [i|#{output opts}: linking... |]
-    let (symtab, instructions) = link assembled
-    when (dumpSymbolTable opts) $ putStrLn (printSymbolTable symtab)
-    putStr "emitting binary... "
-    let binary = emit instructions
-    putStr "writing... "
-    BS.writeFile (output opts) binary
-    putStrLn "done!"
+    case link assembled of
+      Left errors -> prettyPrintLinkErrors errors >> exitFailure
+      Right (warnings, (symtab, instructions)) -> do
+        prettyPrintLinkWarnings warnings
+        when (dumpSymbolTable opts) $ putStrLn (printSymbolTable symtab)
+        putStr "emitting binary... "
+        let binary = emit instructions
+        putStr "writing... "
+        BS.writeFile (output opts) binary
+        putStrLn "done!"
 
 printWithLineMention :: Text -> Int -> Text -> IO ()
 printWithLineMention file lineIx text =
