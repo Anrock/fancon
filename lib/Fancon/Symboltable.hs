@@ -2,7 +2,7 @@
 module Fancon.Symboltable
   ( -- * Types and constructors
     Symbol(..)
-  , SymbolTable(..)
+  , SymbolTable
   , emptySymbolTable
 
   -- * Convenience type synonyms
@@ -13,6 +13,10 @@ module Fancon.Symboltable
 
   -- * Queries
   , referencesToLocals
+  , local
+  , exports
+  , imports
+  , references
   , isDefined
 
   -- * Modification
