@@ -73,3 +73,8 @@ prettyPrintAssemblyErrors file errors = forM_ errors \case
     [i|Invalid opcode #{opcode}|]
   InvalidOperands operands lineIx -> printWithLineMention file lineIx
     [i|Invalid operands for command: #{operands}|]
+
+prettyPrintLinkErrors :: [Link.Error] -> IO ()
+prettyPrintLinkErrors errors = forM_ errors \case
+  Undefined sym -> putStrLn [i|Undefined symbol #{sym}|]
+  DuplicateDefinition sym -> putStrLn [i|Duplicate definition of #{sym}|]
