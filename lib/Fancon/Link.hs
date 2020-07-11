@@ -8,6 +8,7 @@ import qualified Data.Map as M
 import Data.Map ((\\))
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Vector as V
+import qualified Data.Set as S
 
 data Error = Undefined Text
            | DuplicateDefinition Text
@@ -23,9 +24,14 @@ link ms = validate linked
 
 validate :: Module -> Either [Error] ([Warning], Module)
 validate m@(symtab, _) = if null errors then Right (warnings, m) else Left errors
-  where warnings = (if isDefined "main" symtab then [] else [NoMain]) <> unuseds
-        errors = []
-        unuseds = 
+  where warnings = [NoMain | not (isDefined "main" symtab)] <> unuseds
+        unuseds = Unused <$> S.toList unreferencedExports
+          where exportsExceptMain = S.delete "main" $ exports symtab
+                unreferencedExports = exportsExceptMain S.\\ referencesNameSet symtab
+        errors :: [Error]
+        errors = undefinedSymbols <> duplicates
+        undefinedSymbols = Undefined <$> S.toList (referencesNameSet symtab S.\\ localNameSet symtab)
+        duplicates = []
 
 merge :: Module -> Module -> Module
 merge (aSymtab, aInstructions) (bSymtab, bInstructions) = (cSymtab, cInstructions)
