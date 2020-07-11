@@ -10,7 +10,10 @@ import Data.String.Interpolate.IsString
 import System.Exit (exitFailure)
 
 import Fancon
-import Fancon.Assemble
+import Fancon.Assemble hiding (Error, Warning)
+import qualified Fancon.Assemble as Asm
+import Fancon.Link hiding (Error, Warning)
+import qualified Fancon.Link as Link
 import Arguments
 
 main :: IO ()
@@ -46,14 +49,19 @@ printWithLineMention :: Text -> Int -> Text -> IO ()
 printWithLineMention file lineIx text =
     putStrLn [i|\n#{lineIx}: #{T.lines file !! pred lineIx}\n\t#{text}|]
 
-prettyPrintAssemblyWarnings :: Text -> [Warning] -> IO ()
+prettyPrintAssemblyWarnings :: Text -> [Asm.Warning] -> IO ()
 prettyPrintAssemblyWarnings file warnings = forM_ warnings \case
   UnknownCommand txt lineIx -> printWithLineMention file lineIx
     [i|Unknown command #{txt}|]
   UnreferencedSymbol sym lineIx -> printWithLineMention file lineIx
     [i|Unreferenced symbol #{sym}|]
 
-prettyPrintErrors :: Text -> [Error] -> IO ()
+prettyPrintLinkWarnings :: [Link.Warning] -> IO ()
+prettyPrintLinkWarnings warnings = forM_ warnings \case
+  NoMain -> putStrLn [i|No main symbol exported|]
+  Unused sym -> putStrLn [i|Unreferenced symbol #{sym}|]
+
+prettyPrintErrors :: Text -> [Asm.Error] -> IO ()
 prettyPrintErrors file errors = forM_ errors \case
   DuplicateSymbolDefinition sym lineIx -> printWithLineMention file lineIx
     [i|Duplicate symbol definition #{sym}|]
