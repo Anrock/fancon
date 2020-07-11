@@ -30,7 +30,7 @@ main = getArguments >>= \case
         Right parsed -> do
           putStr "assembling... "
           case assemble parsed of
-            Left errors -> prettyPrintErrors content errors >> exitFailure
+            Left errors -> prettyPrintAssemblyErrors content errors >> exitFailure
             Right (warnings, m@(symtab, _)) ->
               do unless (null warnings) $ prettyPrintAssemblyWarnings content warnings
                  when (dumpSymbolTable opts) $ putStrLn (printSymbolTable symtab)
@@ -61,8 +61,8 @@ prettyPrintLinkWarnings warnings = forM_ warnings \case
   NoMain -> putStrLn [i|No main symbol exported|]
   Unused sym -> putStrLn [i|Unreferenced symbol #{sym}|]
 
-prettyPrintErrors :: Text -> [Asm.Error] -> IO ()
-prettyPrintErrors file errors = forM_ errors \case
+prettyPrintAssemblyErrors :: Text -> [Asm.Error] -> IO ()
+prettyPrintAssemblyErrors file errors = forM_ errors \case
   DuplicateSymbolDefinition sym lineIx -> printWithLineMention file lineIx
     [i|Duplicate symbol definition #{sym}|]
   UndefinedSymbolReference sym lineIx -> printWithLineMention file lineIx
