@@ -41,7 +41,10 @@ unit_InstructionsBinary = testGroup "Instructions binary"
   ]
 
 unit_Assembler :: TestTree
-unit_Assembler = testGroup "Assembly" [ unit_AssemblerWarnings, unit_AssemblerErrors ]
+unit_Assembler = testGroup "Assembly" [ unit_AssemblerWarnings
+                                      , unit_AssemblerErrors
+                                      , unit_AssemblerPreprocess
+                                      ]
 
 unit_AssemblerWarnings :: TestTree
 unit_AssemblerWarnings = testGroup "Warnings"
@@ -96,6 +99,11 @@ unit_AssemblerErrors = testGroup "Errors"
       errors "add r0 foo r0"
         @?= [UndefinedSymbolReference "foo" 1]
   ] where errors t = let Left e = assembleTest t in e
+
+unit_AssemblerPreprocess :: TestTree
+unit_AssemblerPreprocess = testGroup "Preprocess"
+  [ 
+  ]
 
 unit_Linker :: TestTree
 unit_Linker = testGroup "Linker" [ unit_LinkerWarnings, unit_LinkerErrors]

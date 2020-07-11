@@ -101,20 +101,24 @@ runAssembler = mapM_ assembleLine
           (Command txt pos) -> command txt pos
 
 instruction :: Text -> [ASTOperand] -> Int -> Sem '[State AssemblerState] ()
-instruction opcodeStr operands line =
-  case validateOpcode opcodeStr of
-    Nothing -> emitError $ InvalidOpcode opcodeStr line
-    Just opcode -> do
-      operands' <- forM (zip [0..] operands) $ \case
+instruction opcode operands line = do
+  (preprocessedOpcode, preprocessedOperands) <- preprocess opcode operands line
+  case validateOpcode opcode of
+    Nothing -> emitError $ InvalidOpcode preprocessedOpcode line
+    Just validOpcode -> do
+      translatedOperands <- forM (zip [0..] preprocessedOperands) $ \case
         (_, Right (Register r))  -> pure $ Register r
         (_, Right (Immediate i)) -> pure $ Immediate i
         (opIx, Left l)  -> do (symtab, lineIx) <- (,) <$> gets symbolTable <*> gets significantLineNumber
                               let symtab' = Sym.addReference l (lineIx, opIx) symtab
                               modify (\s -> s{symbolTable = symtab'})
                               pure $ Immediate 0
-      case validateInstruction opcode operands' of
+      case validateInstruction validOpcode translatedOperands of
         Just ins -> emitInstruction ins
-        Nothing -> emitError $ InvalidOperands operands' line
+        Nothing -> emitError $ InvalidOperands translatedOperands line
+
+preprocess :: Text -> [ASTOperand] -> Int -> Sem '[State AssemblerState] (Text, [ASTOperand])
+preprocess op opers line = pure (op, opers)
 
 command :: Text -> Int -> Sem '[State AssemblerState] ()
 command txt line
