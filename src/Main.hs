@@ -29,7 +29,7 @@ main = getArguments >>= \case
           case assemble parsed of
             Left errors -> prettyPrintErrors content errors >> exitFailure
             Right (warnings, m@(symtab, _)) ->
-              do unless (null warnings) $ prettyPrintWarnings content warnings
+              do unless (null warnings) $ prettyPrintAssemblyWarnings content warnings
                  when (dumpSymbolTable opts) $ putStrLn (printSymbolTable symtab)
                  putStrLn "done!"
                  pure m
@@ -46,8 +46,8 @@ printWithLineMention :: Text -> Int -> Text -> IO ()
 printWithLineMention file lineIx text =
     putStrLn [i|\n#{lineIx}: #{T.lines file !! pred lineIx}\n\t#{text}|]
 
-prettyPrintWarnings :: Text -> [Warning] -> IO ()
-prettyPrintWarnings file warnings = forM_ warnings \case
+prettyPrintAssemblyWarnings :: Text -> [Warning] -> IO ()
+prettyPrintAssemblyWarnings file warnings = forM_ warnings \case
   UnknownCommand txt lineIx -> printWithLineMention file lineIx
     [i|Unknown command #{txt}|]
   UnreferencedSymbol sym lineIx -> printWithLineMention file lineIx
