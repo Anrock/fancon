@@ -13,12 +13,6 @@ import Data.List.NonEmpty (NonEmpty)
 
 import Fancon.Symboltable
 
-localNameSet :: SymbolTable -> S.Set SymbolName
-localNameSet = S.fromDistinctAscList . M.keys . local
-
-referencesNameSet :: SymbolTable -> S.Set SymbolName
-referencesNameSet = S.fromDistinctAscList . M.keys . references
-
 unusedLocals :: SymbolTable -> S.Set SymbolName
 unusedLocals s = localNameSet s \\ referencesNameSet s \\ exports s
 

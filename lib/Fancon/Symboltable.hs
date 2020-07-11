@@ -18,6 +18,8 @@ module Fancon.Symboltable
   , imports
   , references
   , isDefined
+  , localNameSet
+  , referencesNameSet
 
   -- * Modification
   , addConstant
@@ -109,6 +111,12 @@ a `resolveImportsFrom` b = a{imports = imports a \\ namesToResolve, local = M.un
 
 referencesToLocals :: SymbolTable -> M.Map SymbolName (NonEmpty SymbolReference)
 referencesToLocals SymbolTable{local, references} = M.intersection references local
+
+localNameSet :: SymbolTable -> S.Set SymbolName
+localNameSet = S.fromDistinctAscList . M.keys . local
+
+referencesNameSet :: SymbolTable -> S.Set SymbolName
+referencesNameSet = S.fromDistinctAscList . M.keys . references
 
 printSymbolTable :: SymbolTable -> String
 printSymbolTable symtab =
