@@ -81,6 +81,7 @@ library
                , containers
                , bv-sized
                , parameterized-utils
+               , Fancon.Location
 
 test-suite test
   import: warnings, ghc-options, language
