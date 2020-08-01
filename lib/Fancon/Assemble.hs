@@ -12,31 +12,30 @@ import Data.Map qualified as M
 import Data.Set qualified as S
 import Data.List.NonEmpty qualified  as NE
 
+import Fancon.Location
 import Fancon.Instruction
 import Fancon.Parse
 import Fancon.Symboltable (SymbolTable, LineIx, SymbolName)
 import Fancon.Symboltable.Validation qualified as Sym
 import Fancon.Symboltable qualified as Sym
 
-type CommandText = Text
 type Module = (SymbolTable, V.Vector Instruction)
 
-data Warning = UnknownCommand CommandText LineIx
-             | UnreferencedSymbol SymbolName LineIx
+data Warning = UnknownCommand
+             | UnreferencedSymbol
   deriving (Show, Eq)
 
-data Error = DuplicateSymbolDefinition SymbolName LineIx
-           | UndefinedSymbolReference SymbolName LineIx
-           | InvalidWord Text LineIx
-           | InvalidOpcode Text LineIx
-           | InvalidOperands [Operand] LineIx
+data Error = DuplicateSymbolDefinition
+           | UndefinedSymbolReference
+           | InvalidWord
+           | InvalidOpcode
+           | InvalidOperands
   deriving (Show, Eq)
 
-data AssemblerState = AssemblerState { errors :: [Error]
-                                     , warnings :: [Warning]
+data AssemblerState = AssemblerState { errors :: [Spanned Error]
+                                     , warnings :: [Spanned Warning]
                                      , instructions :: V.Vector Instruction
                                      , symbolTable :: SymbolTable
-                                     , locations :: M.Map SymbolName LineIx
                                      , significantLineNumber :: Int
                                      }
 
@@ -45,16 +44,15 @@ initialAssemblerState = AssemblerState { errors = []
                                        , warnings = []
                                        , instructions = []
                                        , symbolTable = Sym.emptySymbolTable
-                                       , locations = M.empty
                                        , significantLineNumber = 0}
 
-assemble :: Traversable t => t AST -> Either [Error] ([Warning], Module)
+assemble :: Traversable t => t AST -> Either [Spanned Error] ([Spanned Warning], Module)
 assemble = validateAssemblerState . semChain
   where semChain :: Traversable t => t AST -> AssemblerState
         semChain = fst . run . runState initialAssemblerState . runAssembler
 
-validateAssemblerState :: AssemblerState -> Either [Error] ([Warning], Module)
-validateAssemblerState AssemblerState{warnings, errors, symbolTable, instructions, locations} =
+validateAssemblerState :: AssemblerState -> Either [Spanned Error] ([Spanned Warning], Module)
+validateAssemblerState AssemblerState{warnings, errors, symbolTable, instructions} =
   case validateSymtab locations symbolTable of
     Left symErrors -> Left $ errors <> symErrors
     Right symWarns ->
@@ -62,7 +60,7 @@ validateAssemblerState AssemblerState{warnings, errors, symbolTable, instruction
       then Left errors
       else Right (warnings <> symWarns, (symbolTable, instructions))
 
-validateSymtab :: M.Map SymbolName LineIx -> SymbolTable -> Either [Error] [Warning]
+validateSymtab :: M.Map SymbolName LineIx -> SymbolTable -> Either [Spanned Error] [Spanned Warning]
 validateSymtab locs s = if not . null $ errors
                         then Left errors
                         else Right warnings
@@ -93,17 +91,17 @@ emitInstruction i = modify (\s@AssemblerState{instructions} -> s{instructions = 
 bumpSignificantLineNumber :: Member (State AssemblerState) r => Sem r ()
 bumpSignificantLineNumber = modify (\s@AssemblerState{significantLineNumber} -> s{significantLineNumber = succ significantLineNumber})
 
-runAssembler :: Traversable t => t AST -> Sem '[State AssemblerState] ()
-runAssembler = mapM_ assembleLine
-  where assembleLine :: AST -> Sem '[State AssemblerState] ()
+runAssembler :: V.Vector AST -> Sem '[State AssemblerState] ()
+runAssembler = V.ifoldM assembleLine
+  where assembleLine :: Int -> AST -> Sem '[State AssemblerState] ()
         assembleLine = \case
-          (Instruction opcode operands pos) -> instruction opcode operands pos >> bumpSignificantLineNumber
-          (Command txt pos) -> command txt pos
+          (Instruction opcode operands) -> instruction opcode operands >> bumpSignificantLineNumber
+          (Command txt) -> command txt
 
-instruction :: Text -> [ASTOperand] -> Int -> Sem '[State AssemblerState] ()
-instruction opcodeStr operands line =
-  case validateOpcode opcodeStr of
-    Nothing -> emitError $ InvalidOpcode opcodeStr line
+instruction :: Spanned Text -> [Spanned ASTOperand] -> Sem '[State AssemblerState] ()
+instruction opcodeStr operands =
+  case validateOpcode (item opcodeStr) of
+    Nothing -> emitError $ InvalidOpcode opcodeStr
     Just opcode -> do
       operands' <- forM (zip [0..] operands) $ \case
         (_, Right (Register r))  -> pure $ Register r
@@ -116,7 +114,7 @@ instruction opcodeStr operands line =
         Just ins -> emitInstruction ins
         Nothing -> emitError $ InvalidOperands operands' line
 
-command :: Text -> Int -> Sem '[State AssemblerState] ()
+command :: Text -> Sem '[State AssemblerState] ()
 command txt line
   | T.head txt == ' ' = pure ()
   | otherwise =
@@ -135,19 +133,14 @@ label :: Text -> Int -> Sem '[State AssemblerState] ()
 label lbl line = do location <- gets significantLineNumber
                     defineFirstOrError lbl line (Sym.addLocation lbl location)
 
-const :: Text -> Text -> Int -> Sem '[State AssemblerState] ()
-const l sval line = case (readMaybe . T.unpack $ sval) :: Maybe Word of
-                      (Just val) -> defineFirstOrError l line (Sym.addConstant l (fromIntegral val))
-                      Nothing    -> emitError $ InvalidWord sval line
+const :: Text -> Text -> Sem '[State AssemblerState] ()
+const l sval = case (readMaybe . T.unpack $ sval) :: Maybe Word of
+                      (Just val) -> defineFirstOrError l (Sym.addConstant l (fromIntegral val))
+                      Nothing    -> emitError $ InvalidWord sval
 
-defineFirstOrError :: SymbolName -> Int -> (SymbolTable -> SymbolTable) -> Sem '[State AssemblerState] ()
-defineFirstOrError name line f =
+defineFirstOrError :: SymbolName -> (SymbolTable -> SymbolTable) -> Sem '[State AssemblerState] ()
+defineFirstOrError name f =
   do symtab <- gets symbolTable
      if Sym.isDefined name symtab
-     then emitError $ DuplicateSymbolDefinition name line
+     then emitError $ DuplicateSymbolDefinition name
      else do modify (\s -> s{symbolTable = f symtab})
-             mentionSymbol name line
-
-mentionSymbol :: SymbolName -> Int -> Sem '[State AssemblerState] ()
-mentionSymbol name line =
-  modify (\s@AssemblerState{locations} -> s{locations = M.insert name line locations})
