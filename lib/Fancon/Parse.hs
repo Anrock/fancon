@@ -9,7 +9,6 @@ import Data.Void (Void)
 import Control.Monad (void)
 import qualified Data.Vector as V
 
-import Fancon.Memory
 import Fancon.Instruction (Operand(..))
 
 type Parser = Parsec Void Text

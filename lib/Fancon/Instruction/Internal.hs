@@ -8,8 +8,6 @@ module Fancon.Instruction.Internal
 
 import Prelude hiding (div, and, or)
 
-import Fancon.Memory
-
 data Opcode = Add
             | Sub
             | Div
