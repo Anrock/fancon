@@ -71,6 +71,7 @@ library
   exposed-modules: Fancon
                  , Fancon.Assemble
                  , Fancon.Link
+                 , Fancon.CPU
   other-modules: Fancon.Memory
                , Fancon.Instruction
                , Fancon.Instruction.Internal
