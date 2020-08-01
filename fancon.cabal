@@ -77,6 +77,7 @@ library
                , Fancon.Parse
                , Fancon.Symboltable
                , Fancon.Symboltable.Validation
+<<<<<<< HEAD
   build-depends: vector
                , containers
                , bv-sized
