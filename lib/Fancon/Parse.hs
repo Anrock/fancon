@@ -10,14 +10,21 @@ import Control.Monad (void)
 import Data.Vector qualified as V
 
 import Fancon.Instruction (Operand(..))
+import Fancon.Location
 
 type Parser = Parsec Void Text
 
 type ASTOperand = Either Text Operand
 
-data AST = Command Text Int
-         | Instruction Text [ASTOperand] Int
+data AST = Command (Spanned Text)
+         | Instruction (Spanned Text) [Spanned ASTOperand]
          deriving (Show, Eq)
+
+parse :: Text -> Either (ParseErrorBundle Text Void) (V.Vector AST)
+parse input = case parsedLines of
+                Left e -> Left e
+                Right ast -> Right $ V.fromList ast
+  where parsedLines = runParser assembly "" input
 
 -- * Helper parsers
 spaceConsumer, whiteSpaceConsumer :: Parser ()
@@ -37,21 +44,22 @@ untilEOL = takeWhileP Nothing (/= '\n')
 identifier :: Parser Text
 identifier = lexeme $ pack <$> some (alphaNumChar <|> oneOf ("!@#$%^&*-_" :: String))
 
-parse :: Text -> Either (ParseErrorBundle Text Void) (V.Vector AST)
-parse input = case parsedLines of
-                Left e -> Left e
-                Right ast -> Right $ V.fromList ast
-  where parsedLines = runParser assembly "" input
+spanned :: Parser a -> Parser (Spanned a)
+spanned p = do
+  begin <- getSourcePos
+  r <- p
+  end <- getSourcePos
+  pure (Spanned (begin, end) r)
 
+-- ** Main parsers
 assembly :: Parser [AST]
 assembly = whiteSpaceConsumer >> some (command <|> instruction)
 
 command :: Parser AST
-command = lineLexeme $ char '.' >> Command <$> untilEOL <*> (unPos . sourceLine <$> getSourcePos)
+command = lineLexeme $ char '.' >> Command <$> spanned untilEOL
 
 instruction :: Parser AST
-instruction = lineLexeme $ do
-  Instruction <$> identifier <*> many operand <*> (unPos . sourceLine <$> getSourcePos)
+instruction = lineLexeme $ Instruction <$> (spanned identifier) <*> many (spanned operand)
 
 operand :: Parser ASTOperand
 operand = register <|> immediate <|> label
