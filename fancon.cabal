@@ -57,13 +57,8 @@ common language
 
 common deps
   build-depends:   base >= 4.7 && < 5
-                 , vector
-                 , containers
                  , megaparsec
-                 , polysemy
-                 , polysemy-plugin
                  , bytestring
-                 , yaml
                  , text
                  , interpolate
 
@@ -81,6 +76,8 @@ library
                , Fancon.Parse
                , Fancon.Symboltable
                , Fancon.Symboltable.Validation
+  build-depends: vector
+               , containers
 
 test-suite test
   import: warnings, ghc-options, language
@@ -91,7 +88,7 @@ test-suite test
   build-depends:  base, fancon, tasty, tasty-hunit, array, bytestring, text
 
 executable fancon
-  import:         ghc-options, warnings, language, deps, polysemy
+  import:         ghc-options, warnings, language, deps
   hs-source-dirs: src
   main-is:        Main.hs
   ghc-options:    -threaded
