@@ -78,6 +78,8 @@ library
                , Fancon.Symboltable.Validation
   build-depends: vector
                , containers
+               , bv-sized
+               , parameterized-utils
 
 test-suite test
   import: warnings, ghc-options, language
