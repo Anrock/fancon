@@ -27,14 +27,12 @@ common polysemy
   ghc-options: -flate-specialise -fspecialise-aggressively -fplugin=Polysemy.Plugin
   build-depends: polysemy
                , polysemy-plugin
-  default-extensions: DataKinds
-                    , FlexibleContexts
+  default-extensions: FlexibleContexts
                     , GADTs
                     , LambdaCase
                     , PolyKinds
                     , RankNTypes
                     , ScopedTypeVariables
-                    , TypeApplications
                     , TypeOperators
                     , TypeFamilies
 
@@ -54,6 +52,8 @@ common language
                       , BlockArguments
                       , RecordWildCards
                       , ImportQualifiedPost
+                      , TypeApplications
+                      , DataKinds
 
 common deps
   build-depends:   base >= 4.7 && < 5
@@ -68,6 +68,7 @@ library
   exposed-modules: Fancon
                  , Fancon.Assemble
                  , Fancon.Link
+                 , Fancon.Bus
   other-modules: Fancon.Memory
                , Fancon.Instruction
                , Fancon.Instruction.Internal

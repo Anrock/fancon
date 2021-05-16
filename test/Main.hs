@@ -11,8 +11,11 @@ import Fancon.Assemble qualified as Asm
 
 import Fancon.Link hiding (Error, Warning)
 
+import Fancon.Bus
+
 import Data.Text (Text)
 import Data.ByteString.Lazy qualified as B
+import Data.Function ((&))
 
 main :: IO ()
 main = defaultMain tests
@@ -24,6 +27,7 @@ unitTests :: TestTree
 unitTests = testGroup "Unit tests" [ unit_InstructionsBinary
                                    , unit_Assembler
                                    , unit_Linker
+                                   , unit_Pins
                                    ]
 
 unit_InstructionsBinary :: TestTree
@@ -137,3 +141,19 @@ compileTest :: Text -> B.ByteString
 compileTest ins = binary
   where Right (_, (_, instructions)) = assembleTest ins
         binary = emit instructions
+
+unit_Pins :: TestTree 
+unit_Pins = testGroup "Pins"
+  [ testCase "Reads bytes correctly" $
+      let pins = bus @16 0xFFAA
+       in [readByte @0 pins, readByte @1 pins] @?= [bus 0xAA, bus 0xFF]
+  , testCase "Reads word correctly" $
+      let pins = bus @32 0xAAAABBBB
+       in [readWord @0 pins, readWord @1 pins] @?= [bus 0xBBBB, bus 0xAAAA]
+  , testCase "Writes bytes correctly" $
+      let pins = bus @16 0 & setByte @0 (bus @8 0xFF) & setByte @1 (bus @8 0xAA)
+       in pins @?= bus @16 0xAAFF
+  , testCase "Writes words correctly" $
+      let pins = bus @32 0 & setWord @0 (bus @16 0xFFFF) & setWord @1 (bus @16 0xAAAA)
+       in pins @?= bus @32 0xAAAAFFFF
+  ]
