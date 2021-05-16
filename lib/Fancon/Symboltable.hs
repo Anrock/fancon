@@ -37,12 +37,12 @@ module Fancon.Symboltable
   , printSymbolTable
   ) where
 
-import qualified Data.Map as M
-import qualified Data.Set as S
+import Data.Map qualified as M
+import Data.Set qualified as S
 import Data.Set ((\\))
 import Data.Text (Text)
 import Data.List.NonEmpty
-import qualified Data.List.NonEmpty as NE
+import Data.List.NonEmpty qualified as NE
 import Data.String.Interpolate
 
 type SymbolName = Text

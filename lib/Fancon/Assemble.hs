@@ -2,21 +2,21 @@ module Fancon.Assemble (assemble, SymbolTable, Module, Warning(..), Error(..)) w
 
 import Prelude hiding (lines, const)
 import Data.Text (Text)
-import qualified Data.Text as T
+import Data.Text qualified as T
 import Polysemy
 import Polysemy.State
 import Control.Monad (forM)
 import Text.Read (readMaybe)
-import qualified Data.Vector as V
-import qualified Data.Map as M
-import qualified Data.Set as S
-import qualified Data.List.NonEmpty as NE
+import Data.Vector qualified as V
+import Data.Map qualified as M
+import Data.Set qualified as S
+import Data.List.NonEmpty qualified  as NE
 
 import Fancon.Instruction
 import Fancon.Parse
 import Fancon.Symboltable (SymbolTable, LineIx, SymbolName)
-import qualified Fancon.Symboltable.Validation as Sym
-import qualified Fancon.Symboltable as Sym
+import Fancon.Symboltable.Validation qualified as Sym
+import Fancon.Symboltable qualified as Sym
 
 type CommandText = Text
 type Module = (SymbolTable, V.Vector Instruction)

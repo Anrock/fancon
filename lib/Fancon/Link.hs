@@ -4,11 +4,11 @@ import Data.Text (Text)
 import Fancon.Assemble (Module)
 import Fancon.Symboltable
 import Fancon.Instruction
-import qualified Data.Map as M
+import Data.Map qualified as M
 import Data.Map ((\\))
-import qualified Data.List.NonEmpty as NE
-import qualified Data.Vector as V
-import qualified Data.Set as S
+import Data.List.NonEmpty qualified as NE
+import Data.Vector qualified as V
+import Data.Set qualified as S
 
 data Error = Undefined Text
            | DuplicateDefinition Text

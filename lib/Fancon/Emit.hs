@@ -1,7 +1,7 @@
 module Fancon.Emit (emit) where
 
-import qualified Data.ByteString.Lazy as B
-import qualified Data.ByteString.Builder as B
+import Data.ByteString.Lazy qualified as B
+import Data.ByteString.Builder qualified as B
 import Data.List (sortBy)
 import Data.Bits (shiftL, (.|.), zeroBits)
 

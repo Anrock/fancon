@@ -12,7 +12,7 @@ module Fancon.Instruction
 
 import Fancon.Instruction.Internal
 import Fancon.Instruction.Validate
-import qualified Data.Vector as V
+import Data.Vector qualified as V
 import Data.String.Interpolate
 import Data.List (intercalate)
 

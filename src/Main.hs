@@ -1,19 +1,19 @@
 module Main (main) where
 
-import qualified Data.Text.IO as T
-import qualified Data.Text as T
+import Data.Text.IO qualified as T
+import Data.Text qualified as T
 import Data.Text (Text)
 import Text.Megaparsec (errorBundlePretty)
 import Control.Monad
-import qualified Data.ByteString.Lazy as BS
+import Data.ByteString.Lazy qualified as BS
 import Data.String.Interpolate.IsString
 import System.Exit (exitFailure)
 
 import Fancon
 import Fancon.Assemble hiding (Error, Warning)
-import qualified Fancon.Assemble as Asm
+import Fancon.Assemble qualified as Asm
 import Fancon.Link hiding (Error, Warning)
-import qualified Fancon.Link as Link
+import Fancon.Link qualified as Link
 import Arguments
 
 main :: IO ()

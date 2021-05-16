@@ -7,8 +7,8 @@ module Fancon.Symboltable.Validation
 ) where
 
 import Data.Set ((\\))
-import qualified Data.Set as S
-import qualified Data.Map as M
+import Data.Set qualified as S
+import Data.Map qualified as M
 import Data.List.NonEmpty (NonEmpty)
 
 import Fancon.Symboltable

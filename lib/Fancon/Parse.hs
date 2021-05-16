@@ -4,10 +4,10 @@ import Prelude hiding (div, or, and)
 import Data.Text (Text, pack)
 import Text.Megaparsec hiding (parse, label, Label)
 import Text.Megaparsec.Char
-import qualified Text.Megaparsec.Char.Lexer as L
+import Text.Megaparsec.Char.Lexer qualified as L
 import Data.Void (Void)
 import Control.Monad (void)
-import qualified Data.Vector as V
+import Data.Vector qualified as V
 
 import Fancon.Instruction (Operand(..))
 

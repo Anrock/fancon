@@ -8,12 +8,12 @@ import Test.Tasty.HUnit
 
 import Fancon
 import Fancon.Assemble hiding (Error, Warning)
-import qualified Fancon.Assemble as Asm
+import Fancon.Assemble qualified as Asm
 
 import Fancon.Link hiding (Error, Warning)
 
 import Data.Text (Text)
-import qualified Data.ByteString.Lazy as B
+import Data.ByteString.Lazy qualified as B
 
 main :: IO ()
 main = defaultMain tests

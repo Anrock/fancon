@@ -53,6 +53,7 @@ common language
                       , NumericUnderscores
                       , BlockArguments
                       , RecordWildCards
+                      , ImportQualifiedPost
 
 common deps
   build-depends:   base >= 4.7 && < 5
