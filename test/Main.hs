@@ -1,5 +1,4 @@
 {-# LANGUAGE NoOverloadedLists #-}
-{-# OPTIONS_GHC -Wno-incomplete-patterns -Wno-incomplete-uni-patterns #-}
 
 module Main (main) where
 

@@ -81,6 +81,7 @@ library
 
 test-suite test
   import: warnings, ghc-options, language
+  ghc-options: -Wno-incomplete-patterns -Wno-incomplete-uni-patterns
   type:           exitcode-stdio-1.0
   hs-source-dirs: test
   main-is:        Main.hs
