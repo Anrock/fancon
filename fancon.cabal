@@ -21,7 +21,7 @@ common warnings
                -Wno-missing-safe-haskell-mode
 
 common ghc-options
-  ghc-options: -O2
+  ghc-options: -O2 -threaded
 
 common polysemy
   ghc-options: -flate-specialise -fspecialise-aggressively -fplugin=Polysemy.Plugin
@@ -81,7 +81,6 @@ library
 
 test-suite test
   import: warnings, ghc-options, language
-  ghc-options:    -threaded
   type:           exitcode-stdio-1.0
   hs-source-dirs: test
   main-is:        Main.hs
@@ -91,6 +90,5 @@ executable fancon
   import:         ghc-options, warnings, language, deps
   hs-source-dirs: src
   main-is:        Main.hs
-  ghc-options:    -threaded
   build-depends:  fancon, optparse-applicative
   other-modules:  Arguments
