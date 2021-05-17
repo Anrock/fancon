@@ -85,7 +85,7 @@ test-suite test
   type:           exitcode-stdio-1.0
   hs-source-dirs: test
   main-is:        Main.hs
-  build-depends:  base, fancon, tasty, tasty-hunit, array, bytestring, text
+  build-depends:  base, fancon, tasty, tasty-hunit, bytestring, text
 
 executable fancon
   import:         ghc-options, warnings, language, deps
