@@ -1,8 +1,0 @@
-cradle:
-  cabal:
-    - path: './src'
-      component: 'exe:fancon'
-    - path: './lib'
-      component: 'lib:fancon'
-    - path: './test'
-      component: 'test'
