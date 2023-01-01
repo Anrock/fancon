@@ -69,7 +69,7 @@ validateSymtab locs s = if not . null $ errors
   where importCollisions = toDuplicate <$> (S.toList . Sym.importNameCollisions $ s)
         undefinedExports = toUndefined <$> (S.toList . Sym.undefinedExports $ s)
         undefineds = concat . M.elems . M.mapWithKey
-                            (\sym refs -> NE.toList $ UndefinedSymbolReference sym <$> NE.map ((+1) . fst)  refs)
+                            (\sym refs -> NE.toList $ UndefinedSymbolReference sym <$> NE.map ((+ 1) . fst)  refs)
                               $ Sym.undefineds s
         unusedLocals =  toUnreferenced <$> (S.toList . Sym.unusedLocals $ s)
         unusedImports = toUnreferenced <$> (S.toList . Sym.unusedImports $ s)
